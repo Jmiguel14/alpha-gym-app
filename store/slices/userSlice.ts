@@ -1,4 +1,5 @@
-import { create, StateCreator } from "zustand";
+import { StateCreator } from "zustand";
+import { storePersistance } from "../../helpers/store-persistance";
 
 interface User {
   id: string;
@@ -12,17 +13,26 @@ export interface UserSlice {
   setUser: (user: User) => void;
   session: string | null;
   setSession: (token?: string | null) => void;
+  getSessionFromStore: () => Promise<string | null>;
 }
 
 const createUserSlice: StateCreator<UserSlice> = (set) => ({
   user: null,
   setUser: (user) => set({ user }),
   session: null,
-  setSession: (token) => {
-    // Set session to true if user is logged in by using the expo-secure-store
+  setSession: async (token) => {
     set({ session: token });
+    if (token) {
+      await storePersistance.setItemAsync("token", token);
+    } else {
+      await storePersistance.deleteItemAsync("token");
+    }
+  },
+  getSessionFromStore: async () => {
+    const token = await storePersistance.getItemAsync("token");
+    set({ session: token });
+    return token;
   },
 });
 
 export default createUserSlice;
-

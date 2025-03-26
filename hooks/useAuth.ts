@@ -1,9 +1,15 @@
 import useBoundStore from "../store";
 import { userService } from "../services/user";
 import { Alert } from "react-native";
+import { useEffect } from "react";
 
 export const useAuth = () => {
-  const { user, setUser, setSession, session } = useBoundStore();
+  const { user, setUser, setSession, session, getSessionFromStore } =
+    useBoundStore();
+
+  useEffect(() => {
+    getSessionFromStore();
+  }, []);
 
   const login = async (
     email: string,
@@ -17,6 +23,7 @@ export const useAuth = () => {
       onSuccess?.();
     } catch (error) {
       console.error(error);
+      console.log({ error });
       if (typeof window !== "undefined") {
         // Web
         window.alert("Invalid email or password");

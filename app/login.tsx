@@ -9,10 +9,6 @@ import { useAuth } from "../hooks/useAuth";
 export default function LoginScreen() {
   const { session, login } = useAuth();
 
-  if (session) {
-    return <Redirect href="/" />;
-  }
-
   const [formState, setFormState] = useState({
     email: "",
     password: "",
@@ -32,6 +28,10 @@ export default function LoginScreen() {
       },
     });
   };
+
+  if (session) {
+    return <Redirect href="/" />;
+  }
 
   return (
     <ThemedView style={{ flex: 1, justifyContent: "center", padding: 20 }}>

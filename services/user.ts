@@ -6,6 +6,12 @@ const login = async (email: string, password: string) => {
   return UserAdapter.fromApi(response.data);
 };
 
+const getUsers = async () => {
+  const response = await api.get("/users");
+  return response.data;
+};
+
 export const userService = {
   login,
+  getUsers,
 };
