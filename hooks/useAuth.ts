@@ -4,11 +4,18 @@ import { Alert } from "react-native";
 import { useEffect } from "react";
 
 export const useAuth = () => {
-  const { user, setUser, setSession, session, getSessionFromStore } =
-    useBoundStore();
+  const {
+    user,
+    setUser,
+    setSession,
+    session,
+    getSessionFromStore,
+    getUserFromStore,
+  } = useBoundStore();
 
   useEffect(() => {
     getSessionFromStore();
+    getUserFromStore();
   }, []);
 
   const login = async (
@@ -34,5 +41,5 @@ export const useAuth = () => {
     }
   };
 
-  return { user, login, session };
+  return { user, login, session, setUser, setSession };
 };

@@ -72,7 +72,7 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   button: {
-    backgroundColor: "#90EE90",
+    backgroundColor: "#008F39",
     padding: 15,
     borderRadius: 5,
     alignItems: "center",

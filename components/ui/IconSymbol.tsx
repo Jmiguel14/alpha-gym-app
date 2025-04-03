@@ -13,6 +13,10 @@ const MAPPING = {
   "paperplane.fill": "send",
   "chevron.left.forwardslash.chevron.right": "code",
   "chevron.right": "chevron-right",
+  "arrow.right": "keyboard-arrow-right",
+  "inventory": "inventory",
+  "production-quantity-limits": "production-quantity-limits",
+  "sale": "sale",
   person: "person",
 } as Partial<
   Record<
@@ -34,7 +38,7 @@ export function IconSymbol({
   color,
   style,
 }: {
-  name: IconSymbolName;
+  name: string;
   size?: number;
   color: string | OpaqueColorValue;
   style?: StyleProp<ViewStyle>;

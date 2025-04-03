@@ -10,18 +10,24 @@ interface User {
 
 export interface UserSlice {
   user: User | null;
-  setUser: (user: User) => void;
+  setUser: (user: User | null) => void;
   session: string | null;
   setSession: (token?: string | null) => void;
   getSessionFromStore: () => Promise<string | null>;
+  getUserFromStore: () => Promise<string>;
 }
 
 const createUserSlice: StateCreator<UserSlice> = (set) => ({
   user: null,
-  setUser: (user) => set({ user }),
+  setUser: async (user) => {
+    set({ user });
+    const userString = JSON.stringify(user);
+    await storePersistance.setItemAsync("user", userString);
+  },
   session: null,
   setSession: async (token) => {
     set({ session: token });
+    console.log({ token });
     if (token) {
       await storePersistance.setItemAsync("token", token);
     } else {
@@ -32,6 +38,13 @@ const createUserSlice: StateCreator<UserSlice> = (set) => ({
     const token = await storePersistance.getItemAsync("token");
     set({ session: token });
     return token;
+  },
+  getUserFromStore: async () => {
+    const userString = (await storePersistance.getItemAsync("user")) ?? null;
+    console.log({ userString });
+    const user = JSON.parse(userString as string);
+    set({ user });
+    return user;
   },
 });
 

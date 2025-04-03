@@ -11,7 +11,13 @@ const getUsers = async () => {
   return response.data;
 };
 
+const getUser = async (id: string) => {
+  const response = await api.get(`/users/${id}`);
+  return response.data;
+};
+
 export const userService = {
   login,
   getUsers,
+  getUser,
 };
