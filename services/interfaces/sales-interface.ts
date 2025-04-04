@@ -1,4 +1,6 @@
-interface SaleDetail {
+import { Product } from "./product-interface";
+
+export interface SaleDetail {
   id: number;
   sale_id: number;
   product_id: number;
@@ -8,6 +10,7 @@ interface SaleDetail {
   total_price: string;
   created_at: string;
   updated_at: string;
+  product: Product;
 }
 
 interface Seller {

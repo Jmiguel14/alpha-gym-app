@@ -23,11 +23,11 @@ export interface UserApiResponse {
 class UserAdapter {
   static fromApi(user: UserApiResponse) {
     return {
-      id: user.status.data.user.id,
-      email: user.status.data.user.email,
-      name: user.status.data.user.name,
-      roles: user.status.data.user.roles,
-      token: user.status.token,
+      id: user?.status?.data?.user?.id,
+      email: user?.status?.data?.user?.email,
+      name: user?.status?.data?.user?.name,
+      roles: user?.status?.data?.user?.roles,
+      token: user?.status?.token,
     };
   }
 

@@ -12,7 +12,7 @@ export default function AppLayout() {
     <Stack>
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="users/[id]" options={{ title: "Usuario" }} key={"users/[id]"} />
-      <Stack.Screen name="sales/[id]" options={{ title: "Venta" }} key={"sales/[id]"} />
+      <Stack.Screen name="sales/[id]" options={{ title: "Venta", headerShown: false }} key={"sales/[id]"} />
     </Stack>
   );
 }

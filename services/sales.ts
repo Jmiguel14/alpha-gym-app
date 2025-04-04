@@ -6,6 +6,12 @@ const getSales = async () => {
   return response.data;
 };
 
+const getSale = async (id: string) => {
+  const response = await api.get<{ sale: Sale }>(`/sales/${id}`);
+  return response.data;
+}
+
 export const salesService = {
   getSales,
+  getSale,
 }

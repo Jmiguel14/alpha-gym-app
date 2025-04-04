@@ -29,7 +29,6 @@ export const useAuth = () => {
       setSession(token);
       onSuccess?.();
     } catch (error) {
-      console.error(error);
       console.log({ error });
       if (typeof window !== "undefined") {
         // Web

@@ -5,40 +5,66 @@ import { useUsers } from "../../../hooks/useUsers";
 import { useCallback, useRef } from "react";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { IconSymbol } from "../../../components/ui/IconSymbol";
 import { Colors } from "../../../constants/Colors";
 import { useThemeColor } from "../../../hooks/useThemeColor";
 import { router } from "expo-router";
 import { useColorScheme } from "../../../hooks/useColorScheme.web";
 
-const UserItem = ({ title, subtitle, userId }: { title: string, subtitle: string, userId: string }) => {
-  const backgroundColor = useThemeColor({}, 'background');
+const UserItem = ({
+  title,
+  subtitle,
+  userId,
+}: {
+  title: string;
+  subtitle: string;
+  userId: string;
+}) => {
+  const backgroundColor = useThemeColor({}, "background");
   const colorScheme = useColorScheme();
 
   const onPress = () => {
     router.push(`/users/${userId}`);
-  }
+  };
 
   return (
-    <TouchableOpacity style={[{ backgroundColor }, styles.item]} onPress={onPress}>
+    <TouchableOpacity
+      style={[
+        { backgroundColor: Colors[colorScheme ?? "light"].background },
+        styles.item,
+      ]}
+      onPress={onPress}
+    >
       <ThemedView>
-        <IconSymbol size={28} name="person" color={Colors[colorScheme ?? 'light'].text} />
+        <IconSymbol
+          size={28}
+          name="person"
+          color={Colors[colorScheme ?? "light"].text}
+        />
       </ThemedView>
       <ThemedView style={styles.itemContent}>
-        <ThemedText style={styles.title}>{title}</ThemedText>
+        <ThemedText type="title">{title}</ThemedText>
         <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
       </ThemedView>
       <ThemedView style={styles.itemRight}>
-        <IconSymbol name="arrow.right" size={24} color="white" />
+        <IconSymbol
+          name="arrow.right"
+          size={24}
+          color={Colors[colorScheme ?? "light"].text}
+        />
       </ThemedView>
     </TouchableOpacity>
-  )
-}
+  );
+};
 
 export default function UsersScreen() {
   const { users, isLoading } = useUsers();
   const bottomSheetRef = useRef<BottomSheet>(null);
+  const { top } = useSafeAreaInsets();
 
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);
@@ -46,14 +72,20 @@ export default function UsersScreen() {
 
   return (
     <GestureHandlerRootView style={styles.container}>
-      <SafeAreaView style={styles.container}>
+      <ThemedView style={[{ top }, styles.container]}>
         <FlatList
           data={users}
           refreshing={isLoading}
-          renderItem={({ item }) => <UserItem title={item.name} subtitle={item.roles.join(", ")} userId={item.id} />}
+          renderItem={({ item }) => (
+            <UserItem
+              title={item.name}
+              subtitle={item.roles.join(", ")}
+              userId={item.id}
+            />
+          )}
           keyExtractor={(item) => item.id}
         />
-      </SafeAreaView>
+      </ThemedView>
       <BottomSheet
         ref={bottomSheetRef}
         onChange={handleSheetChanges}
@@ -81,10 +113,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    backgroundColor: Colors.dark.background
-  },
-  title: {
-    fontSize: 32,
   },
   avatar: {
     width: 60,
@@ -92,12 +120,11 @@ const styles = StyleSheet.create({
   },
   itemContent: {
     flex: 1,
-    gap: 10
   },
   subtitle: {
     fontSize: 16,
   },
   itemRight: {
     alignItems: "flex-end",
-  }
+  },
 });

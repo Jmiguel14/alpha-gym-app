@@ -17,7 +17,9 @@ const MAPPING = {
   "inventory": "inventory",
   "production-quantity-limits": "production-quantity-limits",
   "sale": "sale",
-  person: "person",
+  "user-circle": "supervised-user-circle",
+  "person": "person",
+  'arrow-back': 'arrow-back'
 } as Partial<
   Record<
     import("expo-symbols").SymbolViewProps["name"],
