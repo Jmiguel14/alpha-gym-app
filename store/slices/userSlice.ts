@@ -27,7 +27,6 @@ const createUserSlice: StateCreator<UserSlice> = (set) => ({
   session: null,
   setSession: async (token) => {
     set({ session: token });
-    console.log({ token });
     if (token) {
       await storePersistance.setItemAsync("token", token);
     } else {
@@ -41,7 +40,6 @@ const createUserSlice: StateCreator<UserSlice> = (set) => ({
   },
   getUserFromStore: async () => {
     const userString = (await storePersistance.getItemAsync("user")) ?? null;
-    console.log({ userString });
     const user = JSON.parse(userString as string);
     set({ user });
     return user;

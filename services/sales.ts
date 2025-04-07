@@ -11,7 +11,15 @@ const getSale = async (id: string) => {
   return response.data;
 }
 
+const updateSale = async (id: string, data: Partial<Sale>) => {
+  const response = await api.put<{ sale: Sale }>(`/sales/${id}`, {
+    sale: data,
+  });
+  return response.data;
+}
+
 export const salesService = {
   getSales,
   getSale,
+  updateSale,
 }
