@@ -2,7 +2,7 @@ import axios from "axios";
 import useBoundStore from "../store";
 import { Platform } from "react-native";
 
-const baseURL = Platform.OS === 'android' ? "http://10.0.2.2:3001" : 'http://localhost:3001' 
+const baseURL = Platform.OS === 'android' || Platform.OS == 'ios' ? "http://10.0.2.2:3001" : 'http://localhost:3001' 
 
 export const api = axios.create({
   baseURL,

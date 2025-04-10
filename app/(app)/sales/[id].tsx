@@ -18,8 +18,22 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useThemeColor } from "../../../hooks/useThemeColor";
 import { ThemedTextInput } from "../../../components/ThemedTextInput";
 import SelectDropdown from "react-native-select-dropdown";
+import { useUsers } from "../../../hooks/useUsers";
+import SaleForm from "../../../components/Sales/Forms/SaleForm";
 
-const STATUS_OPTIONS = [
+export interface SelectedSale extends Partial<Omit<Sale, "seller">> {
+  seller?: {
+    id: number;
+    label: string;
+  };
+}
+
+export interface UserOption {
+  id: string;
+  label: string;
+}
+
+export const STATUS_OPTIONS = [
   {
     id: "pending",
     label: "Pendiente",
@@ -34,11 +48,11 @@ const STATUS_OPTIONS = [
   },
 ];
 
-const STATUS_OPTIONS_HASH = {
+export const STATUS_OPTIONS_HASH = {
   pending: STATUS_OPTIONS[0],
   paid: STATUS_OPTIONS[1],
-  cancelled: STATUS_OPTIONS[2]
-} as {[key: string]: typeof STATUS_OPTIONS[1]}
+  cancelled: STATUS_OPTIONS[2],
+} as { [key: string]: (typeof STATUS_OPTIONS)[1] };
 
 const SaleDetailItem = ({ saleDetail }: { saleDetail: SaleDetail }) => {
   const colorScheme = useColorScheme();
@@ -77,25 +91,41 @@ const SaleDetailItem = ({ saleDetail }: { saleDetail: SaleDetail }) => {
   );
 };
 
+const INITIAL_SALE: SelectedSale = {
+  id: 0,
+  name: "",
+  description: "",
+  status: STATUS_OPTIONS_HASH.pending.id,
+  total_amount: "0",
+  seller: {
+    id: 0,
+    label: "",
+  },
+};
+
 const SaleShow = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { sale, loading, updateSale, updating } = useSale(id);
   const backgroundColor = useThemeColor({}, "background");
+  const { users, isLoading: isLoadingUsers } = useUsers();
 
-  const [selectedSale, setSelectedSale] = useState<Partial<Sale> | null>(null);
+  const [selectedSale, setSelectedSale] = useState<SelectedSale>(INITIAL_SALE);
 
   const colorScheme = useColorScheme();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   useEffect(() => {
+    const { seller } = sale || {};
     if (sale) {
       setSelectedSale({
         ...sale,
+        seller: {
+          id: seller?.id || 0,
+          label: seller?.name || "",
+        },
       });
     }
   }, [sale]);
-
-  console.log({selectedSale})
 
   // callbacks
   const handlePresentModalPress = useCallback(() => {
@@ -107,7 +137,7 @@ const SaleShow = () => {
 
   const handleEditSale = () => {};
 
-  const handleChange = (key: keyof Partial<Sale>, value: string | number) => {
+  const handleChange = (key: keyof SelectedSale, value: string | number) => {
     setSelectedSale({
       ...selectedSale,
       [key]: value,
@@ -115,14 +145,20 @@ const SaleShow = () => {
   };
 
   const handleSave = () => {
+    const { seller, ...rest } = selectedSale || {};
     updateSale(
       id,
       {
-        ...selectedSale,
+        ...rest,
       },
       { onSuccess: bottomSheetModalRef.current?.dismiss }
     );
   };
+
+  const usersOptions = users.map((user) => ({
+    id: user.id,
+    label: user.name,
+  }));
 
   return (
     <GestureHandlerRootView style={styles.container}>
@@ -176,67 +212,13 @@ const SaleShow = () => {
           )}
         >
           <BottomSheetView style={styles.contentContainer}>
-            <ThemedView style={styles.productItem}>
-              <ThemedText type="defaultSemiBold">Nombre: </ThemedText>
-              <ThemedTextInput
-                onChangeText={(value) => handleChange("name", value)}
-                value={selectedSale?.name ?? ""}
-                style={styles.input}
-                multiline
-              />
-            </ThemedView>
-            <ThemedView style={styles.productItem}>
-              <ThemedText type="defaultSemiBold">Descripción: </ThemedText>
-              <ThemedTextInput
-                onChangeText={(value) => handleChange("description", value)}
-                value={selectedSale?.description ?? ""}
-                style={styles.input}
-                multiline
-              />
-            </ThemedView>
-            <ThemedView style={styles.productItem}>
-              <ThemedText type="defaultSemiBold">Estado: </ThemedText>
-              <SelectDropdown
-                data={STATUS_OPTIONS}
-                renderItem={(selectedItem) => (
-                  <ThemedView
-                    style={[
-                      {
-                        borderBottomColor: Colors[colorScheme ?? "light"].text,
-                      },
-                      styles.renderItem,
-                    ]}
-                  >
-                    <ThemedText>{selectedItem?.label}</ThemedText>
-                  </ThemedView>
-                )}
-                onSelect={(selectedItem, index) => {
-                  handleChange("status", selectedItem?.id);
-                }}
-                renderButton={(selectedItem, isOpened) => (
-                  <ThemedView style={styles.dropdownButtonStyle}>
-                    <ThemedText>
-                      {selectedItem?.id
-                        ? selectedItem?.label
-                        : "Elija una opción"}
-                    </ThemedText>
-                  </ThemedView>
-                )}
-                dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
-                defaultValue={STATUS_OPTIONS_HASH[selectedSale?.status || 'pending']}
-              />
-            </ThemedView>
-            <ThemedView style={styles.actionView}>
-              <TouchableOpacity
-                style={styles.saveButton}
-                disabled={updating}
-                onPress={handleSave}
-              >
-                <ThemedText type="defaultSemiBold">
-                  {false ? "Guardando" : "Guardar"}
-                </ThemedText>
-              </TouchableOpacity>
-            </ThemedView>
+            <SaleForm
+              handleChange={handleChange}
+              selectedSale={selectedSale}
+              handleSave={handleSave}
+              usersOptions={usersOptions}
+              loading={updating}
+            />
           </BottomSheetView>
         </BottomSheetModal>
       </BottomSheetModalProvider>

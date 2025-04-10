@@ -3,11 +3,12 @@ import { salesService } from "../services/sales";
 import { Sale } from "../services/interfaces/sales-interface";
 import { useSales } from "./useSales";
 
-export const useSale = (id: string) => {
+export const useSale = (id?: string) => {
   const [sale, setSale] = useState<Sale | null>(null);
   const {fetchSales} = useSales();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [creating, setCreating] = useState(false);
 
   const fetchSale = async (id: string) => {
     try {
@@ -19,6 +20,22 @@ export const useSale = (id: string) => {
       setLoading(false);
     }
   };
+
+  const createSale = async (
+    data: Partial<Sale>,
+    { onSuccess }: { onSuccess?: (sale: Sale) => void } = {}
+  ) => {
+    setCreating(true);
+    try {
+      const response = await salesService.createSale(data);
+      fetchSales();
+      onSuccess && onSuccess(response.sale);
+    } catch (error) {
+      console.error("Error creating sale:", error);
+    } finally {
+      setCreating(false);
+    }
+  }
 
   const updateSale = async (
     id: string,
@@ -48,5 +65,7 @@ export const useSale = (id: string) => {
     updating,
     fetchSale,
     updateSale,
+    createSale,
+    creating,
   };
 };

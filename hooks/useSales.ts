@@ -9,7 +9,6 @@ export const useSales = () => {
     useShallow((state) => ({ sales: state.sales, setSales: state.setSales }))
   );
 
-  console.log({ sales });
   const [loading, setLoading] = useState(true);
 
   const fetchSales = async () => {

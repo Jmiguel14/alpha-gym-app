@@ -1,24 +1,35 @@
-import { StyleSheet, Image, Platform, TouchableOpacity, FlatList } from 'react-native';
+import {
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  SafeAreaView,
+} from "react-native";
 
-import { Collapsible } from '@/components/Collapsible';
-import { ExternalLink } from '@/components/ExternalLink';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { useSales } from '@/hooks/useSales';
-import { useThemeColor } from '@/hooks/useThemeColor';
-import { useColorScheme } from '@/hooks/useColorScheme.web';
-import { Colors } from '../../../constants/Colors';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { router } from 'expo-router';
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import { useSales } from "@/hooks/useSales";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import { useColorScheme } from "@/hooks/useColorScheme.web";
+import { Colors } from "../../../constants/Colors";
+import { router } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  BottomSheetModal,
+  BottomSheetModalProvider,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
+import { useCallback, useRef, useState } from "react";
+import SaleForm from "../../../components/Sales/Forms/SaleForm";
+import { SelectedSale, STATUS_OPTIONS_HASH } from "../sales/[id]";
+import { useUsers } from "../../../hooks/useUsers";
+import { useSale } from "../../../hooks/useSale";
 
 const SaleItem = ({
   title,
   subtitle,
   id,
-  totalAmount
+  totalAmount,
 }: {
   title?: string;
   subtitle?: string;
@@ -30,7 +41,7 @@ const SaleItem = ({
 
   const onPress = () => {
     router.push(`/sales/${id}`);
-  }
+  };
 
   return (
     <TouchableOpacity
@@ -45,7 +56,7 @@ const SaleItem = ({
         />
       </ThemedView>
       <ThemedView style={styles.itemContent}>
-        <ThemedText style={styles.title}>{title}</ThemedText>
+        <ThemedText type="title">{title}</ThemedText>
         <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
       </ThemedView>
       <ThemedView style={styles.itemRight}>
@@ -56,12 +67,66 @@ const SaleItem = ({
   );
 };
 
+const INITIAL_SALE: SelectedSale = {
+  id: 0,
+  name: "",
+  description: "",
+  status: STATUS_OPTIONS_HASH.pending.id,
+  total_amount: "0",
+  seller: {
+    id: 0,
+    label: "",
+  },
+};
+
 export default function SalesScreen() {
-  const {sales, loading} = useSales()
-  
+  const { sales, loading } = useSales();
+  const textColor = useThemeColor({}, "text");
+  const backgroundColor = useThemeColor({}, "background");
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const [selectedSale, setSelectedSale] = useState<SelectedSale>(INITIAL_SALE);
+  const { users, isLoading: isLoadingUsers } = useUsers();
+  const { creating, createSale } = useSale();
+
+  const usersOptions = users.map((user) => ({
+    id: user.id,
+    label: user.name,
+  }));
+
+  // callbacks
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
+  const handleSheetChanges = useCallback((index: number) => {
+    console.log("handleSheetChanges", index);
+  }, []);
+
+  const handleChange = (key: keyof SelectedSale, value: string | number) => {
+    setSelectedSale({
+      ...selectedSale,
+      [key]: value,
+    });
+  };
+
+  const handleSave = () => {
+    const { seller, ...rest } = selectedSale || {};
+    createSale(
+      { ...rest, client_id: 1 },
+      { onSuccess: (sale) => router.push(`/sales/${sale.id}`) }
+    );
+  };
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <BottomSheetModalProvider>
+        <ThemedView style={styles.headAction}>
+          <TouchableOpacity onPress={handlePresentModalPress}>
+            <IconSymbol name="add" size={32} color={textColor} />
+          </TouchableOpacity>
+        </ThemedView>
+        <ThemedView style={styles.headTitle}>
+          <ThemedText type="title">Ventas</ThemedText>
+        </ThemedView>
         <FlatList
           data={sales}
           refreshing={loading}
@@ -75,6 +140,41 @@ export default function SalesScreen() {
           )}
           keyExtractor={(item) => item?.id?.toString() || ""}
         />
+        <BottomSheetModal
+          ref={bottomSheetModalRef}
+          onChange={handleSheetChanges}
+          snapPoints={["97%"]}
+          backgroundStyle={{
+            backgroundColor: backgroundColor,
+          }}
+          handleIndicatorStyle={{
+            backgroundColor: Colors.dark.text,
+          }}
+          handleComponent={() => (
+            <ThemedView style={styles.handle}>
+              <TouchableOpacity
+                style={styles.cancelText}
+                onPress={() => {
+                  bottomSheetModalRef.current?.dismiss();
+                }}
+              >
+                <ThemedText>Cancelar</ThemedText>
+              </TouchableOpacity>
+              <ThemedText type="subtitle">Editar venta</ThemedText>
+              <ThemedText />
+            </ThemedView>
+          )}
+        >
+          <BottomSheetView style={styles.contentContainer}>
+            <SaleForm
+              handleChange={handleChange}
+              selectedSale={selectedSale}
+              handleSave={handleSave}
+              usersOptions={usersOptions}
+              loading={creating}
+            />
+          </BottomSheetView>
+        </BottomSheetModal>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
@@ -83,6 +183,15 @@ export default function SalesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  headAction: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    padding: 12,
+  },
+  headTitle: {
+    paddingInline: 24,
+    paddingBlock: 12,
   },
   contentContainer: {
     flex: 1,
@@ -93,7 +202,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    backgroundColor: Colors.dark.background,
   },
   title: {
     fontSize: 32,
@@ -104,7 +212,6 @@ const styles = StyleSheet.create({
   },
   itemContent: {
     flex: 1,
-    gap: 10,
   },
   subtitle: {
     fontSize: 16,

@@ -43,7 +43,7 @@ const ProductItem = ({
         />
       </ThemedView>
       <ThemedView style={styles.itemContent}>
-        <ThemedText style={styles.title}>{title}</ThemedText>
+        <ThemedText type="title">{title}</ThemedText>
         <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
       </ThemedView>
       <ThemedView style={styles.itemRight}>
@@ -205,7 +205,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 16,
-    backgroundColor: Colors.dark.background,
   },
   title: {
     fontSize: 32,
@@ -216,7 +215,6 @@ const styles = StyleSheet.create({
   },
   itemContent: {
     flex: 1,
-    gap: 10,
   },
   subtitle: {
     fontSize: 16,
