@@ -10,7 +10,7 @@ export interface SaleDetail {
   total_price: string;
   created_at: string;
   updated_at: string;
-  product: Product;
+  product?: Product;
 }
 
 interface Seller {
@@ -18,6 +18,12 @@ interface Seller {
   name: string;
   email: string;
   roles: string[];
+}
+
+interface Client {
+  id: number;
+  name: string;
+  email: string;
 }
 
 export interface Sale {
@@ -35,4 +41,9 @@ export interface Sale {
   updated_at: string;
   sale_details: SaleDetail[];
   seller: Seller;
+  client: Client;
+}
+
+export interface SaleUpdate extends Partial<Omit<Sale, 'sale_details'>> {
+  sale_details?: Partial<SaleDetail>[];
 }

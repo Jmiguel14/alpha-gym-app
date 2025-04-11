@@ -1,5 +1,5 @@
 import { api } from ".";
-import { Sale } from "./interfaces/sales-interface";
+import { Sale, SaleUpdate } from "./interfaces/sales-interface";
 
 const getSales = async () => {
   const response = await api.get<{ sales: Sale[] }>("/sales");
@@ -9,7 +9,7 @@ const getSales = async () => {
 const getSale = async (id: string) => {
   const response = await api.get<{ sale: Sale }>(`/sales/${id}`);
   return response.data;
-}
+};
 
 const createSale = async (data: Partial<Sale>) => {
   const response = await api.post<{ sale: Sale }>("/sales", {
@@ -18,16 +18,16 @@ const createSale = async (data: Partial<Sale>) => {
   return response.data;
 };
 
-const updateSale = async (id: string, data: Partial<Sale>) => {
+const updateSale = async (id: string, data: SaleUpdate) => {
   const response = await api.put<{ sale: Sale }>(`/sales/${id}`, {
-    sale: data,
+    sale: { ...data, sale_details_attributes: data.sale_details },
   });
   return response.data;
-}
+};
 
 export const salesService = {
   getSales,
   getSale,
   createSale,
   updateSale,
-}
+};

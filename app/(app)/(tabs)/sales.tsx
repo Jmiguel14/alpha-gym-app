@@ -24,6 +24,7 @@ import SaleForm from "../../../components/Sales/Forms/SaleForm";
 import { SelectedSale, STATUS_OPTIONS_HASH } from "../sales/[id]";
 import { useUsers } from "../../../hooks/useUsers";
 import { useSale } from "../../../hooks/useSale";
+import { useClients } from "../../../hooks/useClients";
 
 const SaleItem = ({
   title,
@@ -77,6 +78,10 @@ const INITIAL_SALE: SelectedSale = {
     id: 0,
     label: "",
   },
+  client: {
+    id: 0,
+    label: "",
+  }
 };
 
 export default function SalesScreen() {
@@ -87,10 +92,16 @@ export default function SalesScreen() {
   const [selectedSale, setSelectedSale] = useState<SelectedSale>(INITIAL_SALE);
   const { users, isLoading: isLoadingUsers } = useUsers();
   const { creating, createSale } = useSale();
+  const { clients } = useClients();
 
   const usersOptions = users.map((user) => ({
     id: user.id,
     label: user.name,
+  }));
+
+  const clientsOptions = clients.map((client) => ({
+    id: client.id,
+    label: client.name,
   }));
 
   // callbacks
@@ -109,9 +120,9 @@ export default function SalesScreen() {
   };
 
   const handleSave = () => {
-    const { seller, ...rest } = selectedSale || {};
+    const { seller, client, ...rest } = selectedSale || {};
     createSale(
-      { ...rest, client_id: 1 },
+      { ...rest },
       { onSuccess: (sale) => router.push(`/sales/${sale.id}`) }
     );
   };
@@ -119,27 +130,29 @@ export default function SalesScreen() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <BottomSheetModalProvider>
-        <ThemedView style={styles.headAction}>
-          <TouchableOpacity onPress={handlePresentModalPress}>
-            <IconSymbol name="add" size={32} color={textColor} />
-          </TouchableOpacity>
+        <ThemedView style={{flex: 1}}>
+          <ThemedView style={styles.headAction}>
+            <TouchableOpacity onPress={handlePresentModalPress}>
+              <IconSymbol name="add" size={32} color={textColor} />
+            </TouchableOpacity>
+          </ThemedView>
+          <ThemedView style={styles.headTitle}>
+            <ThemedText type="title">Ventas</ThemedText>
+          </ThemedView>
+          <FlatList
+            data={sales}
+            refreshing={loading}
+            renderItem={({ item }) => (
+              <SaleItem
+                title={item.name || "N/A"}
+                subtitle={item.description || "N/A"}
+                totalAmount={item.total_amount}
+                id={item.id}
+              />
+            )}
+            keyExtractor={(item) => item?.id?.toString() || ""}
+          />
         </ThemedView>
-        <ThemedView style={styles.headTitle}>
-          <ThemedText type="title">Ventas</ThemedText>
-        </ThemedView>
-        <FlatList
-          data={sales}
-          refreshing={loading}
-          renderItem={({ item }) => (
-            <SaleItem
-              title={item.name || "N/A"}
-              subtitle={item.description || "N/A"}
-              totalAmount={item.total_amount}
-              id={item.id}
-            />
-          )}
-          keyExtractor={(item) => item?.id?.toString() || ""}
-        />
         <BottomSheetModal
           ref={bottomSheetModalRef}
           onChange={handleSheetChanges}
@@ -160,7 +173,7 @@ export default function SalesScreen() {
               >
                 <ThemedText>Cancelar</ThemedText>
               </TouchableOpacity>
-              <ThemedText type="subtitle">Editar venta</ThemedText>
+              <ThemedText type="subtitle">Crear venta</ThemedText>
               <ThemedText />
             </ThemedView>
           )}
@@ -171,6 +184,7 @@ export default function SalesScreen() {
               selectedSale={selectedSale}
               handleSave={handleSave}
               usersOptions={usersOptions}
+              clientsOptions={clientsOptions}
               loading={creating}
             />
           </BottomSheetView>

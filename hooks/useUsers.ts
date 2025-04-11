@@ -3,7 +3,7 @@ import { userService } from "../services/user";
 import { Platform, Alert } from "react-native";
 
 interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   roles: string[];

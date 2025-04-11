@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { salesService } from "../services/sales";
-import { Sale } from "../services/interfaces/sales-interface";
+import { Sale, SaleUpdate } from "../services/interfaces/sales-interface";
 import { useSales } from "./useSales";
 
 export const useSale = (id?: string) => {
@@ -39,7 +39,7 @@ export const useSale = (id?: string) => {
 
   const updateSale = async (
     id: string,
-    data: Partial<Sale>,
+    data: SaleUpdate,
     { onSuccess }: { onSuccess?: () => void } = {}
   ) => {
     setUpdating(true);

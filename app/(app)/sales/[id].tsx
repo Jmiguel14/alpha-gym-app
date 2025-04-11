@@ -1,4 +1,4 @@
-import { FlatList, StyleSheet, TouchableOpacity } from "react-native";
+import { Button, FlatList, StyleSheet, TouchableOpacity } from "react-native";
 import { ThemedText } from "../../../components/ThemedText";
 import { ThemedView } from "../../../components/ThemedView";
 import { IconSymbol } from "../../../components/ui/IconSymbol";
@@ -16,22 +16,31 @@ import {
 } from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useThemeColor } from "../../../hooks/useThemeColor";
-import { ThemedTextInput } from "../../../components/ThemedTextInput";
-import SelectDropdown from "react-native-select-dropdown";
 import { useUsers } from "../../../hooks/useUsers";
 import SaleForm from "../../../components/Sales/Forms/SaleForm";
+import { useClients } from "../../../hooks/useClients";
+import SaleDetailForm from "../../../components/Sales/Forms/SaleDetailForm";
+import { useProducts } from "../../../hooks/useProducts";
 
-export interface SelectedSale extends Partial<Omit<Sale, "seller">> {
+export interface SelectedSale extends Partial<Omit<Sale, "seller" | "client">> {
   seller?: {
+    id: number;
+    label: string;
+  };
+  client?: {
     id: number;
     label: string;
   };
 }
 
-export interface UserOption {
-  id: string;
+interface SelectOption {
+  id: number;
   label: string;
 }
+
+export type UserOption = SelectOption;
+
+export type ClientOptions = SelectOption;
 
 export const STATUS_OPTIONS = [
   {
@@ -54,9 +63,14 @@ export const STATUS_OPTIONS_HASH = {
   cancelled: STATUS_OPTIONS[2],
 } as { [key: string]: (typeof STATUS_OPTIONS)[1] };
 
-const SaleDetailItem = ({ saleDetail }: { saleDetail: SaleDetail }) => {
+const SaleDetailItem = ({
+  saleDetail,
+  handlePresentSaleDetailModalPress,
+}: {
+  saleDetail: SaleDetail;
+  handlePresentSaleDetailModalPress: () => void;
+}) => {
   const colorScheme = useColorScheme();
-  const handleOnPress = () => {};
 
   return (
     <TouchableOpacity
@@ -67,7 +81,7 @@ const SaleDetailItem = ({ saleDetail }: { saleDetail: SaleDetail }) => {
         },
         styles.item,
       ]}
-      onPress={handleOnPress}
+      onPress={handlePresentSaleDetailModalPress}
     >
       <ThemedView>
         <IconSymbol
@@ -77,7 +91,7 @@ const SaleDetailItem = ({ saleDetail }: { saleDetail: SaleDetail }) => {
         />
       </ThemedView>
       <ThemedView style={{ gap: 10 }}>
-        <ThemedText type="subtitle">{saleDetail.product.name}</ThemedText>
+        <ThemedText type="subtitle">{saleDetail?.product?.name}</ThemedText>
         <ThemedText>
           {saleDetail.quantity} x ${saleDetail.unit_price}
         </ThemedText>
@@ -101,18 +115,28 @@ const INITIAL_SALE: SelectedSale = {
     id: 0,
     label: "",
   },
+  client: {
+    id: 0,
+    label: "",
+  },
 };
 
 const SaleShow = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { sale, loading, updateSale, updating } = useSale(id);
+  const textColor = useThemeColor({}, "text");
   const backgroundColor = useThemeColor({}, "background");
+  const { clients } = useClients();
   const { users, isLoading: isLoadingUsers } = useUsers();
 
   const [selectedSale, setSelectedSale] = useState<SelectedSale>(INITIAL_SALE);
+  const [selectedSaleDetailId, setSelectedSaleDetailId] = useState<
+    number | null
+  >(null);
 
   const colorScheme = useColorScheme();
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const saleFileBottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   useEffect(() => {
     const { seller } = sale || {};
@@ -123,11 +147,19 @@ const SaleShow = () => {
           id: seller?.id || 0,
           label: seller?.name || "",
         },
+        client: {
+          id: sale.client?.id || 0,
+          label: sale.client?.name || "",
+        },
       });
     }
   }, [sale]);
 
   // callbacks
+  const handlePresentSaleDetailModalPress = useCallback((id: number) => {
+    setSelectedSaleDetailId(id);
+    saleFileBottomSheetModalRef.current?.present();
+  }, []);
   const handlePresentModalPress = useCallback(() => {
     bottomSheetModalRef.current?.present();
   }, []);
@@ -145,7 +177,7 @@ const SaleShow = () => {
   };
 
   const handleSave = () => {
-    const { seller, ...rest } = selectedSale || {};
+    const { seller, client, ...rest } = selectedSale || {};
     updateSale(
       id,
       {
@@ -160,32 +192,60 @@ const SaleShow = () => {
     label: user.name,
   }));
 
+  const clientsOptions = clients.map((client) => ({
+    id: client.id,
+    label: client.name,
+  }));
+
+  let selectedSaleDetail = sale?.sale_details.find(
+    (saleDetail) => saleDetail.id === selectedSaleDetailId
+  );
+
+  const { products } = useProducts();
+
+  const productsOptions = products.map((product) => ({
+    id: product.id || 0,
+    label: product.name || "",
+  }));
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <BottomSheetModalProvider>
-        <Header>
-          <ThemedText type="link" onPress={() => handlePresentModalPress()}>
-            Editar
-          </ThemedText>
-        </Header>
-        <ThemedView style={styles.head_container}>
-          <IconSymbol
-            size={64}
-            name="person"
-            color={Colors[colorScheme ?? "light"].text}
+        <ThemedView style={{ flex: 1 }}>
+          <Header>
+            <ThemedText type="link" onPress={() => handlePresentModalPress()}>
+              Editar
+            </ThemedText>
+          </Header>
+          <ThemedView style={styles.head_container}>
+            <IconSymbol
+              size={64}
+              name="person"
+              color={Colors[colorScheme ?? "light"].text}
+            />
+            <ThemedText type="title">${sale?.total_amount}</ThemedText>
+            <ThemedText>{sale?.seller.name}</ThemedText>
+          </ThemedView>
+          <ThemedView style={{ padding: 20, alignItems: "center" }}>
+            <ThemedText type="subtitle">Productos</ThemedText>
+          </ThemedView>
+          <FlatList
+            data={sale?.sale_details}
+            refreshing={loading}
+            renderItem={({ item }) => (
+              <SaleDetailItem
+                saleDetail={item}
+                handlePresentSaleDetailModalPress={() =>
+                  handlePresentSaleDetailModalPress(item.id)
+                }
+              />
+            )}
+            keyExtractor={(item) => item.id.toString()}
           />
-          <ThemedText type="title">${sale?.total_amount}</ThemedText>
-          <ThemedText>{sale?.seller.name}</ThemedText>
+          <ThemedView style={styles.addProductButtonContainer}>
+            <Button title="Agregar producto" onPress={() => {}} />
+          </ThemedView>
         </ThemedView>
-        <ThemedView style={{ padding: 20, alignItems: "center" }}>
-          <ThemedText type="subtitle">Productos</ThemedText>
-        </ThemedView>
-        <FlatList
-          data={sale?.sale_details}
-          refreshing={loading}
-          renderItem={({ item }) => <SaleDetailItem saleDetail={item} />}
-          keyExtractor={(item) => item.id.toString()}
-        />
         <BottomSheetModal
           ref={bottomSheetModalRef}
           onChange={handleSheetChanges}
@@ -217,7 +277,46 @@ const SaleShow = () => {
               selectedSale={selectedSale}
               handleSave={handleSave}
               usersOptions={usersOptions}
+              clientsOptions={clientsOptions}
               loading={updating}
+            />
+          </BottomSheetView>
+        </BottomSheetModal>
+        <BottomSheetModal
+          ref={saleFileBottomSheetModalRef}
+          snapPoints={["97%"]}
+          backgroundStyle={{
+            backgroundColor: backgroundColor,
+          }}
+          handleIndicatorStyle={{
+            backgroundColor: textColor,
+          }}
+          handleComponent={() => (
+            <ThemedView style={styles.handle}>
+              <TouchableOpacity
+                style={styles.cancelText}
+                onPress={() => {
+                  saleFileBottomSheetModalRef.current?.dismiss();
+                }}
+              >
+                <ThemedText>Cancelar</ThemedText>
+              </TouchableOpacity>
+              <ThemedText type="subtitle">Detalle de venta</ThemedText>
+              <ThemedText />
+            </ThemedView>
+          )}
+        >
+          <BottomSheetView style={styles.contentContainer}>
+            <SaleDetailForm
+              saleId={id}
+              defaultSaleDetail={{
+                ...selectedSaleDetail,
+                product: {
+                  id: selectedSaleDetail?.product?.id || 0,
+                  label: selectedSaleDetail?.product?.name || "",
+                },
+              }}
+              productsOptions={productsOptions}
             />
           </BottomSheetView>
         </BottomSheetModal>
@@ -292,6 +391,11 @@ const styles = StyleSheet.create({
   renderItem: {
     padding: 10,
     borderBottomWidth: 1,
+  },
+  addProductButtonContainer: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

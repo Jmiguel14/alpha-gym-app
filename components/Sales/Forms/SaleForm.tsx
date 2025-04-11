@@ -1,5 +1,5 @@
 import SelectDropdown from "react-native-select-dropdown";
-import { SelectedSale, STATUS_OPTIONS, STATUS_OPTIONS_HASH, UserOption } from "../../../app/(app)/sales/[id]";
+import { ClientOptions, SelectedSale, STATUS_OPTIONS, STATUS_OPTIONS_HASH, UserOption } from "../../../app/(app)/sales/[id]";
 import { ThemedText } from "../../ThemedText";
 import { ThemedTextInput } from "../../ThemedTextInput";
 import { ThemedView } from "../../ThemedView";
@@ -12,6 +12,7 @@ interface SaleFormProps {
   selectedSale: SelectedSale;
   usersOptions: UserOption[];
   loading: boolean;
+  clientsOptions: ClientOptions[];
 }
 
 function SaleForm({
@@ -20,9 +21,11 @@ function SaleForm({
   selectedSale,
   usersOptions,
   loading,
+  clientsOptions
 }: SaleFormProps) {
   const textColor = useThemeColor({}, "text");
   const backgroundColor = useThemeColor({}, "background");
+
   return (
     <ThemedView style={{flex: 1}}>
       <ThemedView style={styles.productItem}>
@@ -71,6 +74,36 @@ function SaleForm({
           )}
           dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
           defaultValue={STATUS_OPTIONS_HASH[selectedSale?.status || "pending"]}
+        />
+      </ThemedView>
+      <ThemedView style={styles.productItem}>
+        <ThemedText type="defaultSemiBold">Cliente: </ThemedText>
+        <SelectDropdown
+          data={clientsOptions}
+          renderItem={(selectedItem) => (
+            <ThemedView
+              style={[
+                {
+                  borderBottomColor: textColor,
+                },
+                styles.renderItem,
+              ]}
+            >
+              <ThemedText>{selectedItem?.label}</ThemedText>
+            </ThemedView>
+          )}
+          onSelect={(selectedItem, index) => {
+            handleChange("client_id", selectedItem?.id);
+          }}
+          renderButton={(selectedItem, isOpened) => (
+            <ThemedView style={styles.dropdownButtonStyle}>
+              <ThemedText>
+                {selectedItem?.id ? selectedItem?.label : "Elija una opción"}
+              </ThemedText>
+            </ThemedView>
+          )}
+          dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
+          defaultValue={selectedSale?.client}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
