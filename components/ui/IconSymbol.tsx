@@ -14,7 +14,7 @@ const MAPPING = {
   "chevron.left.forwardslash.chevron.right": "code",
   "chevron.right": "chevron-right",
   "arrow.right": "keyboard-arrow-right",
-  "inventory": "inventory",
+  "inventory": "inventory-2",
   "production-quantity-limits": "production-quantity-limits",
   "sale": "sale",
   "user-circle": "supervised-user-circle",

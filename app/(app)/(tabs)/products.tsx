@@ -1,20 +1,29 @@
-import { ThemedText } from "../../../components/ThemedText";
-import { ThemedView } from "../../../components/ThemedView";
-import { useColorScheme } from "../../../hooks/useColorScheme.web";
-import { useProducts } from "../../../hooks/useProducts";
-import { useThemeColor } from "../../../hooks/useThemeColor";
-import { FlatList, StyleSheet, TouchableOpacity } from "react-native";
-import { IconSymbol } from "../../../components/ui/IconSymbol";
-import { Colors } from "../../../constants/Colors";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { useColorScheme } from "@/hooks/useColorScheme.web";
+import { useProducts } from "@/hooks/useProducts";
+import { useThemeColor } from "@/hooks/useThemeColor";
+import {
+  Button,
+  FlatList,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
+import { IconSymbol } from "@/components/ui/IconSymbol";
+import { Colors } from "@/constants/Colors";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { useCallback, useRef, useState } from "react";
-import { Product } from "../../../services/interfaces/product-interface";
-import { ThemedTextInput } from "../../../components/ThemedTextInput";
+import React, { useCallback, useRef, useState } from "react";
+import { Product } from "@/services/interfaces/product-interface";
+import ProductForm from "@/components/Products/Forms/ProductForm";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { FormProvider, useForm } from "react-hook-form";
 
 const ProductItem = ({
   title,
@@ -28,6 +37,7 @@ const ProductItem = ({
   onPress: () => void;
 }) => {
   const backgroundColor = useThemeColor({}, "background");
+  const textColor = useThemeColor({}, "text");
   const colorScheme = useColorScheme();
 
   return (
@@ -47,58 +57,87 @@ const ProductItem = ({
         <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
       </ThemedView>
       <ThemedView style={styles.itemRight}>
-        <IconSymbol name="arrow.right" size={24} color="white" />
+        <IconSymbol name="arrow.right" size={24} color={textColor} />
       </ThemedView>
     </TouchableOpacity>
   );
 };
 
 export default function ProductsScreen() {
-  const { products, loading, updateProduct, updatingProduct } = useProducts();
+  const { products, loading, updateProduct, updatingProduct, createProduct } =
+    useProducts();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const formState = useForm<Product>({
+    defaultValues: {
+      name: "",
+      purchase_price: "",
+      sale_price: "",
+      description: "",
+      quantity: 0,
+      sku: "",
+    },
+  });
+
   const backgroundColor = useThemeColor({}, "background");
+  const { top } = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
 
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
 
   // callbacks
   const handlePresentModalPress = useCallback((product: Product) => {
     bottomSheetModalRef.current?.present();
-    setSelectedProduct(product);
+    formState.reset(product, { keepDefaultValues: true });
   }, []);
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);
   }, []);
 
-  const handleChange = (key: keyof Product, value: string | number) => {
-    setSelectedProduct({
-      ...selectedProduct,
-      [key]: value,
-    });
-  };
-
-  const handleSave = () => {
-    if (selectedProduct) {
-      updateProduct(selectedProduct);
+  const handleSave = (data: Product) => {
+    const onSuccess = () => {
       bottomSheetModalRef.current?.close();
+      formState.reset();
+    };
+    if (data.id === undefined) {
+      createProduct(data, { onSuccess });
+    } else {
+      updateProduct(data, { onSuccess });
     }
   };
 
   return (
     <GestureHandlerRootView style={styles.container}>
       <BottomSheetModalProvider>
-        <FlatList
-          data={products}
-          refreshing={loading}
-          renderItem={({ item }) => (
-            <ProductItem
-              title={item.name}
-              subtitle={item.description}
-              id={item.id}
-              onPress={() => handlePresentModalPress(item)}
+        <ThemedView
+          style={{
+            flex: 1,
+            top,
+            paddingBottom:
+              Platform.OS == "android" || Platform.OS == "ios"
+                ? tabBarHeight
+                : 0,
+          }}
+        >
+          <FlatList
+            data={products}
+            refreshing={loading}
+            renderItem={({ item }) => (
+              <ProductItem
+                title={item.name}
+                subtitle={item.description}
+                id={item.id}
+                onPress={() => handlePresentModalPress(item)}
+              />
+            )}
+            keyExtractor={(item) => item?.id?.toString() || ""}
+          />
+          <ThemedView style={styles.addProductButtonContainer}>
+            <Button
+              title="Agregar producto"
+              onPress={() => bottomSheetModalRef.current?.present()}
             />
-          )}
-          keyExtractor={(item) => item?.id?.toString() || ""}
-        />
+          </ThemedView>
+        </ThemedView>
         <BottomSheetModal
           ref={bottomSheetModalRef}
           onChange={handleSheetChanges}
@@ -115,6 +154,10 @@ export default function ProductsScreen() {
                 style={styles.cancelText}
                 onPress={() => {
                   bottomSheetModalRef.current?.dismiss();
+                  console.log({
+                    defaultValues: formState.formState.defaultValues,
+                  });
+                  formState.reset();
                 }}
               >
                 <ThemedText>Cancelar</ThemedText>
@@ -126,65 +169,13 @@ export default function ProductsScreen() {
           onDismiss={() => setSelectedProduct(null)}
         >
           <BottomSheetView style={styles.contentContainer}>
-            <ThemedView style={styles.productItem}>
-              <ThemedText style={styles.productItemDetail}>Nombre: </ThemedText>
-              <ThemedTextInput
-                onChangeText={(value) => handleChange("name", value)}
-                value={selectedProduct?.name}
-                style={styles.input}
-                multiline
+            <FormProvider {...formState}>
+              <ProductForm
+                handleSave={formState.handleSubmit(handleSave)}
+                loading={updatingProduct}
+                selectedProduct={selectedProduct}
               />
-            </ThemedView>
-            <ThemedView style={styles.productItem}>
-              <ThemedText style={styles.productItemDetail}>
-                Precio de compra:{" "}
-              </ThemedText>
-              <ThemedTextInput
-                onChangeText={(value) => handleChange("purchase_price", value)}
-                value={selectedProduct?.purchase_price}
-                style={styles.input}
-              />
-            </ThemedView>
-            <ThemedView style={styles.productItem}>
-              <ThemedText style={styles.productItemDetail}>
-                Precio de venta:{" "}
-              </ThemedText>
-              <ThemedTextInput
-                onChangeText={(value) => handleChange("sale_price", value)}
-                value={selectedProduct?.sale_price}
-                style={styles.input}
-              />
-            </ThemedView>
-            <ThemedView style={styles.productItem}>
-              <ThemedText style={styles.productItemDetail}>
-                Descripción:{" "}
-              </ThemedText>
-              <ThemedTextInput
-                onChangeText={(value) => handleChange("description", value)}
-                value={selectedProduct?.description}
-                style={styles.input}
-                multiline
-              />
-            </ThemedView>
-            <ThemedView style={styles.productItem}>
-              <ThemedText style={styles.productItemDetail}>Stock: </ThemedText>
-              <ThemedTextInput
-                onChangeText={(value) => handleChange("quantity", value)}
-                value={selectedProduct?.quantity?.toString()}
-                style={styles.input}
-              />
-            </ThemedView>
-            <ThemedView style={styles.actionView}>
-              <TouchableOpacity
-                style={styles.saveButton}
-                disabled={updatingProduct}
-                onPress={handleSave}
-              >
-                <ThemedText type="defaultSemiBold">
-                  {updatingProduct ? "Guardando" : "Guardar"}
-                </ThemedText>
-              </TouchableOpacity>
-            </ThemedView>
+            </FormProvider>
           </BottomSheetView>
         </BottomSheetModal>
       </BottomSheetModalProvider>
@@ -255,5 +246,10 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 5,
     alignItems: "center",
+  },
+  addProductButtonContainer: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

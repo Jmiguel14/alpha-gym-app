@@ -6,8 +6,9 @@ import { SaleDetail } from "../../../services/interfaces/sales-interface";
 import { useState } from "react";
 import SelectDropdown from "react-native-select-dropdown";
 import { useThemeColor } from "../../../hooks/useThemeColor";
-import { useProducts } from "../../../hooks/useProducts";
 import { useSale } from "../../../hooks/useSale";
+import { ScrollView } from "react-native-gesture-handler";
+import { Controller, useForm } from "react-hook-form";
 
 interface SaleDetailState extends Partial<SaleDetail> {
   product?: {
@@ -20,30 +21,36 @@ interface SaleDetailFormProps {
   saleId: string;
   defaultSaleDetail?: SaleDetailState;
   productsOptions: Array<{ id: number; label: string }>;
+  onSuccess?: () => void;
+}
+
+const DEFAULT_INITIAL_VALUES = {
+  product: {
+    id: 0,
+    label: "",
+  },
+  quantity: 0,
+  unit_price: "",
+  discount: "0",
+  total_price: "",
 }
 
 function SaleDetailForm({
   defaultSaleDetail,
   productsOptions,
   saleId,
+  onSuccess = () => {},
 }: SaleDetailFormProps) {
-  const [saleDetail, setSaleDetail] = useState<SaleDetailState | undefined>(
-    defaultSaleDetail
-  );
-  const { updateSale } = useSale();
+  const saleDetailForm = useForm<SaleDetailState>({
+    defaultValues: defaultSaleDetail || DEFAULT_INITIAL_VALUES,
+  });
+  const { updateSale, updating } = useSale();
 
   const textColor = useThemeColor({}, "text");
   const backgroundColor = useThemeColor({}, "background");
 
-  const handleChange = (key: keyof SaleDetailState, value: string | number) => {
-    setSaleDetail({
-      ...saleDetail,
-      [key]: value,
-    });
-  };
-
-  const handleSave = () => {
-    const { product, ...rest } = saleDetail || {};
+  const handleSave = (data: SaleDetailState) => {
+    const { product, ...rest } = data;
     updateSale(
       saleId,
       {
@@ -55,65 +62,83 @@ function SaleDetailForm({
       },
       {
         onSuccess: () => {
-          console.log("Sale detail updated successfully");
+          onSuccess();
         },
       }
     );
   };
 
   return (
-    <ThemedView style={{ flex: 1 }}>
+    <ScrollView style={{ flex: 1 }}>
       <ThemedView style={styles.productItem}>
         <ThemedText type="defaultSemiBold">Producto: </ThemedText>
-        <SelectDropdown
-          data={productsOptions}
-          renderItem={(selectedItem) => (
-            <ThemedView
-              style={[
-                {
-                  borderBottomColor: textColor,
-                },
-                styles.renderItem,
-              ]}
-            >
-              <ThemedText>{selectedItem?.label}</ThemedText>
-            </ThemedView>
+        <Controller
+          name="product_id"
+          control={saleDetailForm.control}
+          render={({ field: { value, onBlur, onChange, ref } }) => (
+            <SelectDropdown
+              ref={ref}
+              onBlur={onBlur}
+              data={productsOptions}
+              renderItem={(selectedItem) => (
+                <ThemedView
+                  style={[
+                    {
+                      borderBottomColor: textColor,
+                    },
+                    styles.renderItem,
+                  ]}
+                >
+                  <ThemedText>{selectedItem?.label}</ThemedText>
+                </ThemedView>
+              )}
+              onSelect={(selectedItem, index) => {
+                onChange(selectedItem?.id);
+              }}
+              renderButton={(selectedItem, isOpened) => (
+                <ThemedView style={styles.dropdownButtonStyle}>
+                  <ThemedText>
+                    {selectedItem?.id
+                      ? selectedItem?.label
+                      : "Elija una opción"}
+                  </ThemedText>
+                </ThemedView>
+              )}
+              dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
+              defaultValue={productsOptions.find((el) => el.id == value)}
+            />
           )}
-          onSelect={(selectedItem, index) => {
-            handleChange("product_id", selectedItem?.id);
-          }}
-          renderButton={(selectedItem, isOpened) => (
-            <ThemedView style={styles.dropdownButtonStyle}>
-              <ThemedText>
-                {selectedItem?.id ? selectedItem?.label : "Elija una opción"}
-              </ThemedText>
-            </ThemedView>
-          )}
-          dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
-          defaultValue={saleDetail?.product}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
         <ThemedText type="defaultSemiBold">Cantidad: </ThemedText>
         <ThemedTextInput
-          onChangeText={(value) => handleChange("quantity", value)}
-          value={saleDetail?.quantity?.toString() ?? ""}
+          name="quantity"
+          control={saleDetailForm.control}
           style={styles.input}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
         <ThemedText type="defaultSemiBold">Precio unitario: </ThemedText>
         <ThemedTextInput
-          onChangeText={(value) => handleChange("unit_price", value)}
-          value={saleDetail?.unit_price ?? ""}
+          name="unit_price"
+          control={saleDetailForm.control}
+          style={styles.input}
+        />
+      </ThemedView>
+      <ThemedView style={styles.productItem}>
+        <ThemedText type="defaultSemiBold">Descuento: </ThemedText>
+        <ThemedTextInput
+          name="discount"
+          control={saleDetailForm.control}
           style={styles.input}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
         <ThemedText type="defaultSemiBold">Total: </ThemedText>
         <ThemedTextInput
-          onChangeText={(value) => handleChange("total_price", value)}
-          value={saleDetail?.total_price ?? ""}
+          name="total_price"
+          control={saleDetailForm.control}
           style={styles.input}
           multiline
         />
@@ -121,15 +146,14 @@ function SaleDetailForm({
       <ThemedView style={styles.actionView}>
         <TouchableOpacity
           style={styles.saveButton}
-          // disabled={loading}
-          onPress={handleSave}
+          onPress={saleDetailForm.handleSubmit(handleSave)}
         >
           <ThemedText type="defaultSemiBold">
-            {false ? "Guardando" : "Guardar"}
+            {updating ? "Guardando" : "Guardar"}
           </ThemedText>
         </TouchableOpacity>
       </ThemedView>
-    </ThemedView>
+    </ScrollView>
   );
 }
 
@@ -142,7 +166,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   input: {
-    width: "50%",
+    width: 200,
   },
   renderItem: {
     padding: 10,
@@ -161,7 +185,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   actionView: {
-    position: "absolute",
+    position: "sticky",
     bottom: 0,
     left: 0,
     right: 0,

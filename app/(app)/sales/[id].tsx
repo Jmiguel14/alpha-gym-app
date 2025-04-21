@@ -21,6 +21,7 @@ import SaleForm from "../../../components/Sales/Forms/SaleForm";
 import { useClients } from "../../../hooks/useClients";
 import SaleDetailForm from "../../../components/Sales/Forms/SaleDetailForm";
 import { useProducts } from "../../../hooks/useProducts";
+import { FormProvider, useForm } from "react-hook-form";
 
 export interface SelectedSale extends Partial<Omit<Sale, "seller" | "client">> {
   seller?: {
@@ -128,8 +129,22 @@ const SaleShow = () => {
   const backgroundColor = useThemeColor({}, "background");
   const { clients } = useClients();
   const { users, isLoading: isLoadingUsers } = useUsers();
+  const saleForm = useForm<SelectedSale>({
+    defaultValues: {
+      name: "",
+      description: "",
+      status: "pending",
+      client: {
+        id: 0,
+        label: "",
+      },
+      seller: {
+        id: 0,
+        label: "",
+      },
+    },
+  });
 
-  const [selectedSale, setSelectedSale] = useState<SelectedSale>(INITIAL_SALE);
   const [selectedSaleDetailId, setSelectedSaleDetailId] = useState<
     number | null
   >(null);
@@ -140,18 +155,19 @@ const SaleShow = () => {
 
   useEffect(() => {
     const { seller } = sale || {};
+    const newSelectedSale = {
+      ...sale,
+      seller: {
+        id: seller?.id || 0,
+        label: seller?.name || "",
+      },
+      client: {
+        id: sale?.client?.id || 0,
+        label: sale?.client?.name || "",
+      },
+    };
     if (sale) {
-      setSelectedSale({
-        ...sale,
-        seller: {
-          id: seller?.id || 0,
-          label: seller?.name || "",
-        },
-        client: {
-          id: sale.client?.id || 0,
-          label: sale.client?.name || "",
-        },
-      });
+      saleForm.reset(newSelectedSale, { keepDefaultValues: true });
     }
   }, [sale]);
 
@@ -167,23 +183,19 @@ const SaleShow = () => {
     console.log("handleSheetChanges", index);
   }, []);
 
-  const handleEditSale = () => {};
-
-  const handleChange = (key: keyof SelectedSale, value: string | number) => {
-    setSelectedSale({
-      ...selectedSale,
-      [key]: value,
-    });
-  };
-
-  const handleSave = () => {
-    const { seller, client, ...rest } = selectedSale || {};
+  const handleSave = (data: SelectedSale) => {
+    const { seller, client, ...rest } = data;
     updateSale(
       id,
       {
         ...rest,
       },
-      { onSuccess: bottomSheetModalRef.current?.dismiss }
+      {
+        onSuccess: () => {
+          bottomSheetModalRef.current?.dismiss();
+          saleForm.reset();
+        },
+      }
     );
   };
 
@@ -243,13 +255,16 @@ const SaleShow = () => {
             keyExtractor={(item) => item.id.toString()}
           />
           <ThemedView style={styles.addProductButtonContainer}>
-            <Button title="Agregar producto" onPress={() => {}} />
+            <Button
+              title="Agregar producto"
+              onPress={() => saleFileBottomSheetModalRef.current?.present()}
+            />
           </ThemedView>
         </ThemedView>
         <BottomSheetModal
           ref={bottomSheetModalRef}
           onChange={handleSheetChanges}
-          snapPoints={["97%"]}
+          snapPoints={["95%"]}
           backgroundStyle={{
             backgroundColor: backgroundColor,
           }}
@@ -272,19 +287,19 @@ const SaleShow = () => {
           )}
         >
           <BottomSheetView style={styles.contentContainer}>
-            <SaleForm
-              handleChange={handleChange}
-              selectedSale={selectedSale}
-              handleSave={handleSave}
-              usersOptions={usersOptions}
-              clientsOptions={clientsOptions}
-              loading={updating}
-            />
+            <FormProvider {...saleForm}>
+              <SaleForm
+                handleSave={saleForm.handleSubmit(handleSave)}
+                usersOptions={usersOptions}
+                clientsOptions={clientsOptions}
+                loading={updating}
+              />
+            </FormProvider>
           </BottomSheetView>
         </BottomSheetModal>
         <BottomSheetModal
           ref={saleFileBottomSheetModalRef}
-          snapPoints={["97%"]}
+          snapPoints={["95%"]}
           backgroundStyle={{
             backgroundColor: backgroundColor,
           }}
@@ -297,6 +312,7 @@ const SaleShow = () => {
                 style={styles.cancelText}
                 onPress={() => {
                   saleFileBottomSheetModalRef.current?.dismiss();
+                  setSelectedSaleDetailId(null)
                 }}
               >
                 <ThemedText>Cancelar</ThemedText>
@@ -317,6 +333,10 @@ const SaleShow = () => {
                 },
               }}
               productsOptions={productsOptions}
+              onSuccess={() => {
+                saleFileBottomSheetModalRef.current?.dismiss();
+                setSelectedSaleDetailId(null)
+              }}
             />
           </BottomSheetView>
         </BottomSheetModal>

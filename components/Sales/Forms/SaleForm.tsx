@@ -1,139 +1,188 @@
 import SelectDropdown from "react-native-select-dropdown";
-import { ClientOptions, SelectedSale, STATUS_OPTIONS, STATUS_OPTIONS_HASH, UserOption } from "../../../app/(app)/sales/[id]";
+import {
+  ClientOptions,
+  STATUS_OPTIONS,
+  STATUS_OPTIONS_HASH,
+  UserOption,
+} from "../../../app/(app)/sales/[id]";
 import { ThemedText } from "../../ThemedText";
 import { ThemedTextInput } from "../../ThemedTextInput";
 import { ThemedView } from "../../ThemedView";
 import { useThemeColor } from "../../../hooks/useThemeColor";
 import { StyleSheet, TouchableOpacity } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
+import { Controller, useFormContext } from "react-hook-form";
 
 interface SaleFormProps {
-  handleChange: (key: keyof SelectedSale, value: string | number) => void;
   handleSave: () => void;
-  selectedSale: SelectedSale;
   usersOptions: UserOption[];
   loading: boolean;
   clientsOptions: ClientOptions[];
 }
 
 function SaleForm({
-  handleChange,
   handleSave,
-  selectedSale,
   usersOptions,
   loading,
-  clientsOptions
+  clientsOptions,
 }: SaleFormProps) {
   const textColor = useThemeColor({}, "text");
   const backgroundColor = useThemeColor({}, "background");
+  const formMethods = useFormContext();
 
   return (
-    <ThemedView style={{flex: 1}}>
+    <ScrollView style={{ flex: 1 }}>
       <ThemedView style={styles.productItem}>
         <ThemedText type="defaultSemiBold">Nombre: </ThemedText>
         <ThemedTextInput
-          onChangeText={(value) => handleChange("name", value)}
-          value={selectedSale?.name ?? ""}
+          name="name"
+          control={formMethods.control}
           style={styles.input}
           multiline
+          rules={{ required: "This is a required field" }}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
         <ThemedText type="defaultSemiBold">Descripción: </ThemedText>
         <ThemedTextInput
-          onChangeText={(value) => handleChange("description", value)}
-          value={selectedSale?.description ?? ""}
+          name="description"
+          control={formMethods.control}
           style={styles.input}
           multiline
+          rules={{ required: "This is a required field" }}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
         <ThemedText type="defaultSemiBold">Estado: </ThemedText>
-        <SelectDropdown
-          data={STATUS_OPTIONS}
-          renderItem={(selectedItem) => (
-            <ThemedView
-              style={[
-                {
-                  borderBottomColor: textColor,
-                },
-                styles.renderItem,
-              ]}
-            >
-              <ThemedText>{selectedItem?.label}</ThemedText>
-            </ThemedView>
+        <Controller
+          name="status"
+          render={({ field: { onBlur, onChange, ref, value } }) => (
+            <SelectDropdown
+              onBlur={onBlur}
+              ref={ref}
+              data={STATUS_OPTIONS}
+              renderItem={(selectedItem) => (
+                <ThemedView
+                  style={[
+                    {
+                      borderBottomColor: textColor,
+                    },
+                    styles.renderItem,
+                  ]}
+                >
+                  <ThemedText>{selectedItem?.label}</ThemedText>
+                </ThemedView>
+              )}
+              onSelect={(selectedItem, index) => {
+                onChange(selectedItem.id);
+              }}
+              renderButton={(selectedItem, isOpened) => (
+                <ThemedView style={styles.dropdownButtonStyle}>
+                  <ThemedText>
+                    {selectedItem?.id
+                      ? selectedItem?.label
+                      : "Elija una opción"}
+                  </ThemedText>
+                </ThemedView>
+              )}
+              dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
+              defaultValue={STATUS_OPTIONS_HASH[value || "pending"]}
+            />
           )}
-          onSelect={(selectedItem, index) => {
-            handleChange("status", selectedItem?.id);
-          }}
-          renderButton={(selectedItem, isOpened) => (
-            <ThemedView style={styles.dropdownButtonStyle}>
-              <ThemedText>
-                {selectedItem?.id ? selectedItem?.label : "Elija una opción"}
-              </ThemedText>
-            </ThemedView>
-          )}
-          dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
-          defaultValue={STATUS_OPTIONS_HASH[selectedSale?.status || "pending"]}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
         <ThemedText type="defaultSemiBold">Cliente: </ThemedText>
-        <SelectDropdown
-          data={clientsOptions}
-          renderItem={(selectedItem) => (
-            <ThemedView
-              style={[
-                {
-                  borderBottomColor: textColor,
-                },
-                styles.renderItem,
-              ]}
-            >
-              <ThemedText>{selectedItem?.label}</ThemedText>
+        <Controller
+          name="client_id"
+          rules={{ required: "This is a required field" }}
+          render={({ field: { onBlur, onChange, value, ref } }) => (
+            <ThemedView>
+              <SelectDropdown
+                onBlur={onBlur}
+                ref={ref}
+                data={clientsOptions}
+                renderItem={(selectedItem) => (
+                  <ThemedView
+                    style={[
+                      {
+                        borderBottomColor: textColor,
+                      },
+                      styles.renderItem,
+                    ]}
+                  >
+                    <ThemedText>{selectedItem?.label}</ThemedText>
+                  </ThemedView>
+                )}
+                onSelect={(selectedItem, _index) => {
+                  onChange(selectedItem?.id);
+                }}
+                renderButton={(selectedItem, _isOpened) => (
+                  <ThemedView style={styles.dropdownButtonStyle}>
+                    <ThemedText>
+                      {selectedItem?.id
+                        ? selectedItem?.label
+                        : "Elija una opción"}
+                    </ThemedText>
+                  </ThemedView>
+                )}
+                dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
+                defaultValue={clientsOptions.find((el) => el.id == value)}
+              />
+              {Boolean(formMethods.formState.errors.client_id?.message) && (
+                <ThemedText style={styles.errorText}>
+                  {formMethods?.formState?.errors?.client_id?.message?.toString()}
+                </ThemedText>
+              )}
             </ThemedView>
           )}
-          onSelect={(selectedItem, index) => {
-            handleChange("client_id", selectedItem?.id);
-          }}
-          renderButton={(selectedItem, isOpened) => (
-            <ThemedView style={styles.dropdownButtonStyle}>
-              <ThemedText>
-                {selectedItem?.id ? selectedItem?.label : "Elija una opción"}
-              </ThemedText>
-            </ThemedView>
-          )}
-          dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
-          defaultValue={selectedSale?.client}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
         <ThemedText type="defaultSemiBold">Vendedor: </ThemedText>
-        <SelectDropdown
-          data={usersOptions}
-          renderItem={(selectedItem) => (
-            <ThemedView
-              style={[
-                {
-                  borderBottomColor: textColor,
-                },
-                styles.renderItem,
-              ]}
-            >
-              <ThemedText>{selectedItem?.label}</ThemedText>
+        <Controller
+          name="seller_id"
+          rules={{ required: "This is a required field" }}
+          render={({ field: { onBlur, onChange, value, ref } }) => (
+            <ThemedView>
+              <SelectDropdown
+                onBlur={onBlur}
+                ref={ref}
+                data={usersOptions}
+                renderItem={(selectedItem) => (
+                  <ThemedView
+                    style={[
+                      {
+                        borderBottomColor: textColor,
+                      },
+                      styles.renderItem,
+                    ]}
+                  >
+                    <ThemedText>{selectedItem?.label}</ThemedText>
+                  </ThemedView>
+                )}
+                onSelect={(selectedItem, index) => {
+                  onChange(selectedItem?.id);
+                }}
+                renderButton={(selectedItem, isOpened) => (
+                  <ThemedView style={styles.dropdownButtonStyle}>
+                    <ThemedText>
+                      {selectedItem?.id
+                        ? selectedItem?.label
+                        : "Elija una opción"}
+                    </ThemedText>
+                  </ThemedView>
+                )}
+                dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
+                defaultValue={usersOptions.find((el) => el.id == value)}
+              />
+              {Boolean(formMethods.formState.errors.seller_id?.message) && (
+                <ThemedText style={styles.errorText}>
+                  {formMethods?.formState?.errors?.seller_id?.message?.toString()}
+                </ThemedText>
+              )}
             </ThemedView>
           )}
-          onSelect={(selectedItem, index) => {
-            handleChange("seller_id", selectedItem?.id);
-          }}
-          renderButton={(selectedItem, isOpened) => (
-            <ThemedView style={styles.dropdownButtonStyle}>
-              <ThemedText>
-                {selectedItem?.id ? selectedItem?.label : "Elija una opción"}
-              </ThemedText>
-            </ThemedView>
-          )}
-          dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
-          defaultValue={selectedSale?.seller}
         />
       </ThemedView>
       <ThemedView style={styles.actionView}>
@@ -143,11 +192,11 @@ function SaleForm({
           onPress={handleSave}
         >
           <ThemedText type="defaultSemiBold">
-            {false ? "Guardando" : "Guardar"}
+            {loading ? "Guardando" : "Guardar"}
           </ThemedText>
         </TouchableOpacity>
       </ThemedView>
-    </ThemedView>
+    </ScrollView>
   );
 }
 
@@ -186,11 +235,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 16,
   },
-  input: {
-    width: "50%",
-  },
+  input: {},
   actionView: {
-    position: "absolute",
+    position: "sticky",
     bottom: 0,
     left: 0,
     right: 0,
@@ -218,6 +265,10 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
   },
+  errorText: {
+    color: "#FF6F61",
+    paddingBlock: 5
+  }
 });
 
 export default SaleForm;

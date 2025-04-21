@@ -5,24 +5,25 @@ import { ThemedText } from "../components/ThemedText";
 import { ThemedTextInput } from "../components/ThemedTextInput";
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
+import { useForm } from "react-hook-form";
+
+interface LoginValues {
+  email?: string;
+  password?: string;
+}
 
 export default function LoginScreen() {
   const { session, login } = useAuth();
 
-  const [formState, setFormState] = useState({
-    email: "",
-    password: "",
+  const loginForm = useForm<LoginValues>({
+    defaultValues: {
+      email: "",
+      password: "",
+    },
   });
 
-  const handleOnChange = (key: string, value: string) => {
-    setFormState({
-      ...formState,
-      [key]: value,
-    });
-  };
-
-  const handleOnPress = (event: GestureResponderEvent) => {
-    login(formState.email, formState.password, {
+  const handleOnPress = (data: LoginValues) => {
+    login(data.email || '', data.password || '', {
       onSuccess: () => {
         router.replace("/");
       },
@@ -44,25 +45,30 @@ export default function LoginScreen() {
         <ThemedView style={{ marginBottom: 15 }}>
           <ThemedText style={{ marginBottom: 5 }}>Email</ThemedText>
           <ThemedTextInput
+            name="email"
+            control={loginForm.control}
             placeholder="example@email.com"
             keyboardType="email-address"
             autoCapitalize="none"
-            value={formState.email}
-            onChangeText={(value) => handleOnChange("email", value)}
+            rules={{required: 'Campo requerido'}}
           />
         </ThemedView>
         <ThemedView style={{ marginBottom: 15 }}>
           <ThemedText style={{ marginBottom: 5 }}>Password</ThemedText>
           <ThemedTextInput
+            name="password"
+            control={loginForm.control}
             placeholder="********"
             secureTextEntry
-            value={formState.password}
-            onChangeText={(value) => handleOnChange("password", value)}
+            rules={{required: 'Campo requerido'}}
           />
         </ThemedView>
-        <Pressable style={styles.button} onPress={handleOnPress}>
+        <Pressable
+          style={styles.button}
+          onPress={loginForm.handleSubmit(handleOnPress)}
+        >
           <ThemedText style={{ color: "white", fontWeight: "bold" }}>
-            Login
+            Iniciar sesión
           </ThemedText>
         </Pressable>
       </ThemedView>

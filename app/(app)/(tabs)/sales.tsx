@@ -2,7 +2,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  SafeAreaView,
 } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
@@ -25,6 +24,8 @@ import { SelectedSale, STATUS_OPTIONS_HASH } from "../sales/[id]";
 import { useUsers } from "../../../hooks/useUsers";
 import { useSale } from "../../../hooks/useSale";
 import { useClients } from "../../../hooks/useClients";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { FormProvider, useForm } from "react-hook-form";
 
 const SaleItem = ({
   title,
@@ -38,6 +39,7 @@ const SaleItem = ({
   totalAmount?: string;
 }) => {
   const backgroundColor = useThemeColor({}, "background");
+  const textColor = useThemeColor({}, "text");
   const colorScheme = useColorScheme();
 
   const onPress = () => {
@@ -62,7 +64,7 @@ const SaleItem = ({
       </ThemedView>
       <ThemedView style={styles.itemRight}>
         <ThemedText>${totalAmount}</ThemedText>
-        <IconSymbol name="arrow.right" size={24} color="white" />
+        <IconSymbol name="arrow.right" size={24} color={textColor} />
       </ThemedView>
     </TouchableOpacity>
   );
@@ -81,7 +83,7 @@ const INITIAL_SALE: SelectedSale = {
   client: {
     id: 0,
     label: "",
-  }
+  },
 };
 
 export default function SalesScreen() {
@@ -89,10 +91,25 @@ export default function SalesScreen() {
   const textColor = useThemeColor({}, "text");
   const backgroundColor = useThemeColor({}, "background");
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
-  const [selectedSale, setSelectedSale] = useState<SelectedSale>(INITIAL_SALE);
   const { users, isLoading: isLoadingUsers } = useUsers();
   const { creating, createSale } = useSale();
   const { clients } = useClients();
+  const { top } = useSafeAreaInsets();
+  const saleForm = useForm<SelectedSale>({
+    defaultValues: {
+      name: "",
+      description: "",
+      status: "pending",
+      client: {
+        id: 0,
+        label: "",
+      },
+      seller: {
+        id: 0,
+        label: "",
+      },
+    },
+  })
 
   const usersOptions = users.map((user) => ({
     id: user.id,
@@ -112,15 +129,8 @@ export default function SalesScreen() {
     console.log("handleSheetChanges", index);
   }, []);
 
-  const handleChange = (key: keyof SelectedSale, value: string | number) => {
-    setSelectedSale({
-      ...selectedSale,
-      [key]: value,
-    });
-  };
-
-  const handleSave = () => {
-    const { seller, client, ...rest } = selectedSale || {};
+  const handleSave = (data: SelectedSale) => {
+    const { seller, client, ...rest } = data;
     createSale(
       { ...rest },
       { onSuccess: (sale) => router.push(`/sales/${sale.id}`) }
@@ -130,7 +140,7 @@ export default function SalesScreen() {
   return (
     <GestureHandlerRootView style={styles.container}>
       <BottomSheetModalProvider>
-        <ThemedView style={{flex: 1}}>
+        <ThemedView style={{ flex: 1, top }}>
           <ThemedView style={styles.headAction}>
             <TouchableOpacity onPress={handlePresentModalPress}>
               <IconSymbol name="add" size={32} color={textColor} />
@@ -156,7 +166,7 @@ export default function SalesScreen() {
         <BottomSheetModal
           ref={bottomSheetModalRef}
           onChange={handleSheetChanges}
-          snapPoints={["97%"]}
+          snapPoints={["95%"]}
           backgroundStyle={{
             backgroundColor: backgroundColor,
           }}
@@ -179,14 +189,14 @@ export default function SalesScreen() {
           )}
         >
           <BottomSheetView style={styles.contentContainer}>
-            <SaleForm
-              handleChange={handleChange}
-              selectedSale={selectedSale}
-              handleSave={handleSave}
-              usersOptions={usersOptions}
-              clientsOptions={clientsOptions}
-              loading={creating}
-            />
+            <FormProvider {...saleForm}>
+              <SaleForm
+                handleSave={saleForm.handleSubmit(handleSave)}
+                usersOptions={usersOptions}
+                clientsOptions={clientsOptions}
+                loading={creating}
+              />
+            </FormProvider>
           </BottomSheetView>
         </BottomSheetModal>
       </BottomSheetModalProvider>

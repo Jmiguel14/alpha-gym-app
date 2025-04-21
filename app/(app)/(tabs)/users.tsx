@@ -71,31 +71,20 @@ export default function UsersScreen() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <ThemedView style={[{ top }, styles.container]}>
-        <FlatList
-          data={users}
-          refreshing={isLoading}
-          renderItem={({ item }) => (
-            <UserItem
-              title={item.name}
-              subtitle={item.roles.join(", ")}
-              userId={item.id}
-            />
-          )}
-          keyExtractor={(item) => item.id}
-        />
-      </ThemedView>
-      <BottomSheet
-        ref={bottomSheetRef}
-        onChange={handleSheetChanges}
-        snapPoints={[50, 80]}
-      >
-        <BottomSheetView style={styles.contentContainer}>
-          <ThemedText>Awesome 🎉</ThemedText>
-        </BottomSheetView>
-      </BottomSheet>
-    </GestureHandlerRootView>
+    <ThemedView style={[{ top }, styles.container]}>
+      <FlatList
+        data={users}
+        refreshing={isLoading}
+        renderItem={({ item }) => (
+          <UserItem
+            title={item.name}
+            subtitle={item.roles.join(", ")}
+            userId={item.id.toString()}
+          />
+        )}
+        keyExtractor={(item) => item.id.toString()}
+      />
+    </ThemedView>
   );
 }
 

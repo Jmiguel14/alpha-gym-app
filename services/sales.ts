@@ -13,14 +13,18 @@ const getSale = async (id: string) => {
 
 const createSale = async (data: Partial<Sale>) => {
   const response = await api.post<{ sale: Sale }>("/sales", {
-    sale: data,
+    sale: { ...data, date: new Date().toISOString() },
   });
   return response.data;
 };
 
 const updateSale = async (id: string, data: SaleUpdate) => {
   const response = await api.put<{ sale: Sale }>(`/sales/${id}`, {
-    sale: { ...data, sale_details_attributes: data.sale_details },
+    sale: {
+      ...data,
+      sale_details_attributes: data.sale_details,
+      date: new Date().toISOString(),
+    },
   });
   return response.data;
 };

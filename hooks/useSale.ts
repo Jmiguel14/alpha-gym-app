@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 import { salesService } from "../services/sales";
 import { Sale, SaleUpdate } from "../services/interfaces/sales-interface";
 import { useSales } from "./useSales";
+import useBoundStore from "../store";
+import { useShallow } from "zustand/shallow";
 
 export const useSale = (id?: string) => {
-  const [sale, setSale] = useState<Sale | null>(null);
-  const {fetchSales} = useSales();
+  const { sale, setSale } = useBoundStore(
+    useShallow((state) => ({ sale: state.sale, setSale: state.setSale }))
+  );
+  const { fetchSales } = useSales();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [creating, setCreating] = useState(false);
@@ -35,7 +39,7 @@ export const useSale = (id?: string) => {
     } finally {
       setCreating(false);
     }
-  }
+  };
 
   const updateSale = async (
     id: string,

@@ -2,6 +2,10 @@ import { useEffect, useState } from "react";
 import { Product } from "../services/interfaces/product-interface";
 import { productService } from "../services/products";
 
+interface AsyncCallbacks {
+  onSuccess?: (data: Product) => void;
+}
+
 export const useProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,11 +22,15 @@ export const useProducts = () => {
     }
   };
 
-  const updateProduct = async (product: Product) => {
+  const createProduct = async (
+    product: Product,
+    callbacks?: AsyncCallbacks
+  ) => {
     setUpdatingProduct(true);
     try {
-      await productService.updateProduct(product);
+      await productService.createProduct(product);
       fetchProducts();
+      callbacks?.onSuccess?.(product)
     } catch (error) {
       console.error(error);
     } finally {
@@ -30,6 +38,18 @@ export const useProducts = () => {
     }
   };
 
+  const updateProduct = async (product: Product, callbacks?: AsyncCallbacks) => {
+    setUpdatingProduct(true);
+    try {
+      await productService.updateProduct(product);
+      fetchProducts();
+      callbacks?.onSuccess?.(product)
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setUpdatingProduct(false);
+    }
+  };
 
   useEffect(() => {
     fetchProducts();
@@ -37,8 +57,9 @@ export const useProducts = () => {
 
   return {
     products,
+    createProduct,
     updateProduct,
     updatingProduct,
-    loading
+    loading,
   };
-}
+};

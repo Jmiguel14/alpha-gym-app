@@ -2,10 +2,13 @@ import axios from "axios";
 import useBoundStore from "../store";
 import { Platform } from "react-native";
 
-const baseURL = Platform.OS === 'android' || Platform.OS == 'ios' ? "http://10.0.2.2:3001" : 'http://localhost:3001' 
+// const baseURL = Platform.OS === 'android' || Platform.OS == 'ios' ? "http://10.0.2.2:3001" : 'http://localhost:3001' 
+
+const baseURL = 'https://humble-marlin-barely.ngrok-free.app/'
 
 export const api = axios.create({
   baseURL,
+  withCredentials: false,
 });
 
 api.interceptors.request.use(async (config) => {

@@ -6,6 +6,13 @@ const getProducts = async () => {
   return response.data;
 };
 
+const createProduct = async (product: Product) => {
+  const response = await api.post<Product>("/products", {
+    product,
+  });
+  return response.data;
+};
+
 const updateProduct = async (product: Product) => {
   const response = await api.put<Product>(`/products/${product.id}`, {
     product,
@@ -16,4 +23,5 @@ const updateProduct = async (product: Product) => {
 export const productService = {
   getProducts,
   updateProduct,
+  createProduct
 };
