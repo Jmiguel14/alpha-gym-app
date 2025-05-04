@@ -38,7 +38,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="users"
         options={{
-          title: "Users",
+          title: "Contactos",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="person" color={color} />
           ),
@@ -47,7 +47,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="sales"
         options={{
-          title: "Sales",
+          title: "Ventas",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="paperplane.fill" color={color} />
           ),
@@ -56,7 +56,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="products"
         options={{
-          title: "Products",
+          title: "Productos",
           tabBarIcon: ({ color }) => (
             <IconSymbol size={28} name="inventory" color={color} />
           ),

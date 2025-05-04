@@ -76,6 +76,7 @@ const INITIAL_SALE: SelectedSale = {
   description: "",
   status: STATUS_OPTIONS_HASH.pending.id,
   total_amount: "0",
+  date: new Date(),
   seller: {
     id: 0,
     label: "",
@@ -96,19 +97,7 @@ export default function SalesScreen() {
   const { clients } = useClients();
   const { top } = useSafeAreaInsets();
   const saleForm = useForm<SelectedSale>({
-    defaultValues: {
-      name: "",
-      description: "",
-      status: "pending",
-      client: {
-        id: 0,
-        label: "",
-      },
-      seller: {
-        id: 0,
-        label: "",
-      },
-    },
+    defaultValues: INITIAL_SALE,
   })
 
   const usersOptions = users.map((user) => ({
@@ -132,7 +121,7 @@ export default function SalesScreen() {
   const handleSave = (data: SelectedSale) => {
     const { seller, client, ...rest } = data;
     createSale(
-      { ...rest },
+      { ...rest, date: rest.date?.toISOString() },
       { onSuccess: (sale) => router.push(`/sales/${sale.id}`) }
     );
   };

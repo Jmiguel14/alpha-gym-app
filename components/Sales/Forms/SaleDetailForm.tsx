@@ -3,14 +3,14 @@ import { ThemedText } from "../../ThemedText";
 import { ThemedTextInput } from "../../ThemedTextInput";
 import { ThemedView } from "../../ThemedView";
 import { SaleDetail } from "../../../services/interfaces/sales-interface";
-import { useState } from "react";
 import SelectDropdown from "react-native-select-dropdown";
 import { useThemeColor } from "../../../hooks/useThemeColor";
 import { useSale } from "../../../hooks/useSale";
 import { ScrollView } from "react-native-gesture-handler";
 import { Controller, useForm } from "react-hook-form";
 
-interface SaleDetailState extends Partial<SaleDetail> {
+interface SaleDetailState extends Partial<Omit<SaleDetail, 'quantity'>> {
+  quantity?: string;
   product?: {
     id: number;
     label: string;
@@ -29,7 +29,7 @@ const DEFAULT_INITIAL_VALUES = {
     id: 0,
     label: "",
   },
-  quantity: 0,
+  quantity: "0",
   unit_price: "",
   discount: "0",
   total_price: "",
@@ -57,6 +57,7 @@ function SaleDetailForm({
         sale_details: [
           {
             ...rest,
+            quantity: parseInt(data.quantity || "0"),
           },
         ],
       },
@@ -77,6 +78,7 @@ function SaleDetailForm({
           control={saleDetailForm.control}
           render={({ field: { value, onBlur, onChange, ref } }) => (
             <SelectDropdown
+              search
               ref={ref}
               onBlur={onBlur}
               data={productsOptions}
@@ -92,10 +94,10 @@ function SaleDetailForm({
                   <ThemedText>{selectedItem?.label}</ThemedText>
                 </ThemedView>
               )}
-              onSelect={(selectedItem, index) => {
+              onSelect={(selectedItem, _index) => {
                 onChange(selectedItem?.id);
               }}
-              renderButton={(selectedItem, isOpened) => (
+              renderButton={(selectedItem, _isOpened) => (
                 <ThemedView style={styles.dropdownButtonStyle}>
                   <ThemedText>
                     {selectedItem?.id
@@ -159,15 +161,12 @@ function SaleDetailForm({
 
 const styles = StyleSheet.create({
   productItem: {
-    padding: 20,
+    paddingBlock: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 16,
   },
-  input: {
-    width: 200,
-  },
+  input: {width: 200},
   renderItem: {
     padding: 10,
     borderBottomWidth: 1,

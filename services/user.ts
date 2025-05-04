@@ -11,8 +11,8 @@ const getUsers = async () => {
   return response.data;
 };
 
-const getUser = async (id: string) => {
-  const response = await api.get(`/users/${id}`);
+const getUser = async (id: string, date: string) => {
+  const response = await api.get(`/users/${id}?date=${date}`);
   return response.data;
 };
 

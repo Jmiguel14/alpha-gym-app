@@ -12,6 +12,8 @@ import { useThemeColor } from "../../../hooks/useThemeColor";
 import { StyleSheet, TouchableOpacity } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 import { Controller, useFormContext } from "react-hook-form";
+import { VALIDATION_MESSAGES } from "../../../constants/ValidationMessages";
+import DatePicker from "react-native-date-picker";
 
 interface SaleFormProps {
   handleSave: () => void;
@@ -39,7 +41,7 @@ function SaleForm({
           control={formMethods.control}
           style={styles.input}
           multiline
-          rules={{ required: "This is a required field" }}
+          rules={{ required: VALIDATION_MESSAGES.required }}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
@@ -49,7 +51,7 @@ function SaleForm({
           control={formMethods.control}
           style={styles.input}
           multiline
-          rules={{ required: "This is a required field" }}
+          rules={{ required: VALIDATION_MESSAGES.required }}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
@@ -73,7 +75,7 @@ function SaleForm({
                   <ThemedText>{selectedItem?.label}</ThemedText>
                 </ThemedView>
               )}
-              onSelect={(selectedItem, index) => {
+              onSelect={(selectedItem, _index) => {
                 onChange(selectedItem.id);
               }}
               renderButton={(selectedItem, isOpened) => (
@@ -95,7 +97,7 @@ function SaleForm({
         <ThemedText type="defaultSemiBold">Cliente: </ThemedText>
         <Controller
           name="client_id"
-          rules={{ required: "This is a required field" }}
+          rules={{ required: VALIDATION_MESSAGES.required }}
           render={({ field: { onBlur, onChange, value, ref } }) => (
             <ThemedView>
               <SelectDropdown
@@ -142,7 +144,7 @@ function SaleForm({
         <ThemedText type="defaultSemiBold">Vendedor: </ThemedText>
         <Controller
           name="seller_id"
-          rules={{ required: "This is a required field" }}
+          rules={{ required: VALIDATION_MESSAGES.required }}
           render={({ field: { onBlur, onChange, value, ref } }) => (
             <ThemedView>
               <SelectDropdown
@@ -179,6 +181,23 @@ function SaleForm({
               {Boolean(formMethods.formState.errors.seller_id?.message) && (
                 <ThemedText style={styles.errorText}>
                   {formMethods?.formState?.errors?.seller_id?.message?.toString()}
+                </ThemedText>
+              )}
+            </ThemedView>
+          )}
+        />
+      </ThemedView>
+      <ThemedView style={styles.productItem}>
+        <ThemedText type="defaultSemiBold">Fecha: </ThemedText>
+        <Controller
+          name="date"
+          rules={{ required: VALIDATION_MESSAGES.required }}
+          render={({ field: { onChange, value, ref } }) => (
+            <ThemedView>
+             <DatePicker ref={ref} date={value} onDateChange={onChange} mode="date" />
+              {Boolean(formMethods.formState.errors.date?.message) && (
+                <ThemedText style={styles.errorText}>
+                  {formMethods?.formState?.errors?.date?.message?.toString()}
                 </ThemedText>
               )}
             </ThemedView>
@@ -224,16 +243,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   rightContent: { flex: 1, alignItems: "flex-end" },
-  contentContainer: {
-    flex: 1,
-    padding: 24,
-  },
   productItem: {
-    padding: 20,
+    paddingBlock: 5,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: 16,
   },
   input: {},
   actionView: {

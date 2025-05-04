@@ -23,7 +23,8 @@ import SaleDetailForm from "../../../components/Sales/Forms/SaleDetailForm";
 import { useProducts } from "../../../hooks/useProducts";
 import { FormProvider, useForm } from "react-hook-form";
 
-export interface SelectedSale extends Partial<Omit<Sale, "seller" | "client">> {
+export interface SelectedSale extends Partial<Omit<Sale, "seller" | "client" | 'date'>> {
+  date?: Date;
   seller?: {
     id: number;
     label: string;
@@ -134,6 +135,7 @@ const SaleShow = () => {
       name: "",
       description: "",
       status: "pending",
+      date: new Date(),
       client: {
         id: 0,
         label: "",
@@ -165,9 +167,10 @@ const SaleShow = () => {
         id: sale?.client?.id || 0,
         label: sale?.client?.name || "",
       },
+      date: new Date()
     };
     if (sale) {
-      saleForm.reset(newSelectedSale, { keepDefaultValues: true });
+      saleForm.reset({...newSelectedSale, date: new Date(newSelectedSale.date || "")}, { keepDefaultValues: true });
     }
   }, [sale]);
 
@@ -189,6 +192,7 @@ const SaleShow = () => {
       id,
       {
         ...rest,
+        date: data.date?.toISOString(),
       },
       {
         onSuccess: () => {
@@ -327,6 +331,7 @@ const SaleShow = () => {
               saleId={id}
               defaultSaleDetail={{
                 ...selectedSaleDetail,
+                quantity: selectedSaleDetail?.quantity?.toString() || "0",
                 product: {
                   id: selectedSaleDetail?.product?.id || 0,
                   label: selectedSaleDetail?.product?.name || "",

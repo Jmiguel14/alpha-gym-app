@@ -1,8 +1,8 @@
 import { api } from ".";
 import { Product } from "./interfaces/product-interface";
 
-const getProducts = async () => {
-  const response = await api.get<Product[]>("/products");
+const getProducts = async (searchText: string) => {
+  const response = await api.get<Product[]>("/products?search=" + searchText);
   return response.data;
 };
 
@@ -23,5 +23,5 @@ const updateProduct = async (product: Product) => {
 export const productService = {
   getProducts,
   updateProduct,
-  createProduct
+  createProduct,
 };

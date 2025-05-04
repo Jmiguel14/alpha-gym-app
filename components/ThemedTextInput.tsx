@@ -38,6 +38,7 @@ export function ThemedTextInput({
     <ThemedView>
       <TextInput
         {...props}
+        placeholderTextColor={color}
         ref={controller.field.ref}
         onBlur={controller.field.onBlur}
         onChangeText={controller.field.onChange}

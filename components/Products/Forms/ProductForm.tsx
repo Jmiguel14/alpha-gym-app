@@ -5,6 +5,7 @@ import { ThemedView } from "../../ThemedView";
 import { Product } from "../../../services/interfaces/product-interface";
 import { ScrollView } from "react-native-gesture-handler";
 import { useFormContext } from "react-hook-form";
+import { VALIDATION_MESSAGES } from "../../../constants/ValidationMessages";
 
 interface ProductFormProps {
   handleSave: () => void;
@@ -28,7 +29,7 @@ function ProductForm({
           control={formStateMethods.control}
           style={styles.input}
           multiline
-          rules={{ required: 'This is a required field' }}
+          rules={{ required: VALIDATION_MESSAGES.required }}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
@@ -39,7 +40,7 @@ function ProductForm({
           name="purchase_price"
           control={formStateMethods.control}
           style={styles.input}
-          rules={{ required: 'This is a required field' }}
+          rules={{ required: VALIDATION_MESSAGES.required }}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
@@ -50,7 +51,7 @@ function ProductForm({
           name="sale_price"
           control={formStateMethods.control}
           style={styles.input}
-          rules={{ required: 'This is a required field' }}
+          rules={{ required: VALIDATION_MESSAGES.required }}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
@@ -60,7 +61,7 @@ function ProductForm({
           control={formStateMethods.control}
           style={styles.input}
           multiline
-          rules={{ required: 'This is a required field' }}
+          rules={{ required: VALIDATION_MESSAGES.required }}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
@@ -69,7 +70,7 @@ function ProductForm({
           name="quantity"
           control={formStateMethods.control}
           style={styles.input}
-          rules={{ required: 'This is a required field' }}
+          rules={{ required: VALIDATION_MESSAGES.required }}
         />
       </ThemedView>
       <ThemedView style={styles.productItem}>
@@ -78,7 +79,7 @@ function ProductForm({
           name="sku"
           control={formStateMethods.control}
           style={styles.input}
-          rules={{ required: 'This is a required field' }}
+          rules={{ required: VALIDATION_MESSAGES.required }}
         />
       </ThemedView>
       <ThemedView style={styles.actionView}>

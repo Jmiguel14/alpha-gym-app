@@ -16,7 +16,7 @@ const MAPPING = {
   "arrow.right": "keyboard-arrow-right",
   "inventory": "inventory-2",
   "production-quantity-limits": "production-quantity-limits",
-  "sale": "sale",
+  "sale": "attach-money",
   "user-circle": "supervised-user-circle",
   "person": "person",
   'arrow-back': 'arrow-back',

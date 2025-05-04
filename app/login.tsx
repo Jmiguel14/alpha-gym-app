@@ -1,11 +1,11 @@
 import { Redirect, router } from "expo-router";
-import { GestureResponderEvent, Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import { ThemedView } from "../components/ThemedView";
 import { ThemedText } from "../components/ThemedText";
 import { ThemedTextInput } from "../components/ThemedTextInput";
-import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { useForm } from "react-hook-form";
+import { VALIDATION_MESSAGES } from "../constants/ValidationMessages";
 
 interface LoginValues {
   email?: string;
@@ -23,7 +23,7 @@ export default function LoginScreen() {
   });
 
   const handleOnPress = (data: LoginValues) => {
-    login(data.email || '', data.password || '', {
+    login(data.email || "", data.password || "", {
       onSuccess: () => {
         router.replace("/");
       },
@@ -40,7 +40,7 @@ export default function LoginScreen() {
         <ThemedText
           style={{ fontSize: 24, fontWeight: "bold", marginBottom: 20 }}
         >
-          Login
+          Inicio de sesión
         </ThemedText>
         <ThemedView style={{ marginBottom: 15 }}>
           <ThemedText style={{ marginBottom: 5 }}>Email</ThemedText>
@@ -50,17 +50,17 @@ export default function LoginScreen() {
             placeholder="example@email.com"
             keyboardType="email-address"
             autoCapitalize="none"
-            rules={{required: 'Campo requerido'}}
+            rules={{ required: VALIDATION_MESSAGES.required }}
           />
         </ThemedView>
         <ThemedView style={{ marginBottom: 15 }}>
-          <ThemedText style={{ marginBottom: 5 }}>Password</ThemedText>
+          <ThemedText style={{ marginBottom: 5 }}>Contraseña</ThemedText>
           <ThemedTextInput
             name="password"
             control={loginForm.control}
             placeholder="********"
             secureTextEntry
-            rules={{required: 'Campo requerido'}}
+            rules={{ required: VALIDATION_MESSAGES.required }}
           />
         </ThemedView>
         <Pressable

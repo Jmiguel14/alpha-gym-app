@@ -24,11 +24,13 @@ import ProductForm from "@/components/Products/Forms/ProductForm";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { FormProvider, useForm } from "react-hook-form";
+import Search from "../../../components/Search";
+
+type ProductState = Omit<Product, "quantity"> & { quantity: string };
 
 const ProductItem = ({
   title,
   subtitle,
-  id,
   onPress,
 }: {
   title?: string;
@@ -64,16 +66,16 @@ const ProductItem = ({
 };
 
 export default function ProductsScreen() {
-  const { products, loading, updateProduct, updatingProduct, createProduct } =
+  const { products, loading, updateProduct, updatingProduct, createProduct, searchText, setSearchText } =
     useProducts();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const formState = useForm<Product>({
+  const formState = useForm<ProductState>({
     defaultValues: {
       name: "",
       purchase_price: "",
       sale_price: "",
       description: "",
-      quantity: 0,
+      quantity: "0",
       sku: "",
     },
   });
@@ -87,21 +89,25 @@ export default function ProductsScreen() {
   // callbacks
   const handlePresentModalPress = useCallback((product: Product) => {
     bottomSheetModalRef.current?.present();
-    formState.reset(product, { keepDefaultValues: true });
+    formState.reset(
+      { ...product, quantity: product.quantity?.toString() },
+      { keepDefaultValues: true }
+    );
   }, []);
   const handleSheetChanges = useCallback((index: number) => {
     console.log("handleSheetChanges", index);
   }, []);
 
-  const handleSave = (data: Product) => {
+  const handleSave = (data: ProductState) => {
     const onSuccess = () => {
       bottomSheetModalRef.current?.close();
       formState.reset();
     };
+    const parsedData = { ...data, quantity: parseInt(data.quantity) };
     if (data.id === undefined) {
-      createProduct(data, { onSuccess });
+      createProduct(parsedData, { onSuccess });
     } else {
-      updateProduct(data, { onSuccess });
+      updateProduct(parsedData, { onSuccess });
     }
   };
 
@@ -118,6 +124,7 @@ export default function ProductsScreen() {
                 : 0,
           }}
         >
+          <Search onChangeText={setSearchText} value={searchText} />
           <FlatList
             data={products}
             refreshing={loading}
