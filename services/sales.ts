@@ -1,8 +1,8 @@
 import { api } from ".";
 import { Sale, SaleUpdate } from "./interfaces/sales-interface";
 
-const getSales = async () => {
-  const response = await api.get<{ sales: Sale[] }>("/sales");
+const getSales = async (searchText: string) => {
+  const response = await api.get<{ sales: Sale[] }>("/sales?search=" + searchText);
   return response.data;
 };
 
@@ -28,9 +28,16 @@ const updateSale = async (id: string, data: SaleUpdate) => {
   return response.data;
 };
 
+const deleteSale = async (id: number) => {
+  const response = await api.delete(`/sales/${id}`);
+  return response.data;
+};
+
+
 export const salesService = {
   getSales,
   getSale,
   createSale,
   updateSale,
+  deleteSale,
 };

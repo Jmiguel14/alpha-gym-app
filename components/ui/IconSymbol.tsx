@@ -20,7 +20,8 @@ const MAPPING = {
   "user-circle": "supervised-user-circle",
   "person": "person",
   'arrow-back': 'arrow-back',
-  'add': 'add'
+  'add': 'add',
+  'delete': 'delete',
 } as Partial<
   Record<
     import("expo-symbols").SymbolViewProps["name"],

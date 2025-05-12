@@ -13,6 +13,7 @@ export const useSale = (id?: string) => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchSale = async (id: string) => {
     try {
@@ -59,6 +60,18 @@ export const useSale = (id?: string) => {
     }
   };
 
+  const deleteSale = async (id: number) => {
+    setDeleting(true);
+    try {
+      await salesService.deleteSale(id);
+      fetchSales();
+    } catch (error) {
+      console.error("Error deleting sale:", error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   useEffect(() => {
     id && fetchSale(id);
   }, [id]);
@@ -70,6 +83,8 @@ export const useSale = (id?: string) => {
     fetchSale,
     updateSale,
     createSale,
+    deleteSale,
     creating,
+    deleting,
   };
 };

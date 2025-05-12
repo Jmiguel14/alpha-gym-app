@@ -1,8 +1,4 @@
-import {
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-} from "react-native";
+import { StyleSheet, TouchableOpacity, FlatList } from "react-native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
@@ -12,7 +8,8 @@ import { useThemeColor } from "@/hooks/useThemeColor";
 import { useColorScheme } from "@/hooks/useColorScheme.web";
 import { Colors } from "../../../constants/Colors";
 import { router } from "expo-router";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Gesture, GestureHandlerRootView } from "react-native-gesture-handler";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import {
   BottomSheetModal,
   BottomSheetModalProvider,
@@ -26,6 +23,60 @@ import { useSale } from "../../../hooks/useSale";
 import { useClients } from "../../../hooks/useClients";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FormProvider, useForm } from "react-hook-form";
+import { SharedValue, useAnimatedStyle } from "react-native-reanimated";
+import Search from "../../../components/Search";
+
+interface RightActionProps {
+  prog: SharedValue<number>;
+  drag: SharedValue<number>;
+  rowId: number;
+}
+
+function RightAction({ prog, drag, rowId }: RightActionProps) {
+  const { deleteSale } = useSale();
+  const styleAnimation = useAnimatedStyle(() => {
+    console.log("showRightProgress:", prog.value);
+    console.log("appliedTranslation:", drag.value);
+
+    return {
+      transform: [{ translateX: drag.value + 50 }],
+    };
+  });
+
+  const handleDeleteRow = () => {
+    deleteSale(rowId);
+  }
+
+  return (
+    <ThemedView
+      style={[
+        {
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "red",
+        },
+        styleAnimation,
+      ]}
+    >
+      <TouchableOpacity
+        style={{ width: 70, justifyContent: "center", alignItems: "center" }}
+        onPress={handleDeleteRow}
+      >
+        <ThemedText style={{ textAlign: "center" }}>
+          <IconSymbol
+            name="delete"
+            size={32}
+            color="white"
+            style={{
+              height: "100%",
+              width: 70,
+            }}
+          />
+        </ThemedText>
+      </TouchableOpacity>
+    </ThemedView>
+  );
+}
 
 const SaleItem = ({
   title,
@@ -35,7 +86,7 @@ const SaleItem = ({
 }: {
   title?: string;
   subtitle?: string;
-  id?: number;
+  id: number;
   totalAmount?: string;
 }) => {
   const backgroundColor = useThemeColor({}, "background");
@@ -47,26 +98,36 @@ const SaleItem = ({
   };
 
   return (
-    <TouchableOpacity
-      style={[{ backgroundColor }, styles.item]}
-      onPress={onPress}
+    <Swipeable
+      friction={2}
+      enableTrackpadTwoFingerGesture
+      rightThreshold={60}
+      renderRightActions={(prog, drag) =>
+        RightAction({ prog, drag, rowId: id })
+      }
+      touchAction="pan-y"
     >
-      <ThemedView>
-        <IconSymbol
-          size={28}
-          name="sale"
-          color={Colors[colorScheme ?? "light"].text}
-        />
-      </ThemedView>
-      <ThemedView style={styles.itemContent}>
-        <ThemedText type="title">{title}</ThemedText>
-        <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.itemRight}>
-        <ThemedText>${totalAmount}</ThemedText>
-        <IconSymbol name="arrow.right" size={24} color={textColor} />
-      </ThemedView>
-    </TouchableOpacity>
+      <TouchableOpacity
+        style={[{ backgroundColor }, styles.item]}
+        onPress={onPress}
+      >
+        <ThemedView>
+          <IconSymbol
+            size={28}
+            name="sale"
+            color={Colors[colorScheme ?? "light"].text}
+          />
+        </ThemedView>
+        <ThemedView style={styles.itemContent}>
+          <ThemedText type="title">{title}</ThemedText>
+          <ThemedText style={styles.subtitle}>{subtitle}</ThemedText>
+        </ThemedView>
+        <ThemedView style={styles.itemRight}>
+          <ThemedText>${totalAmount}</ThemedText>
+          <IconSymbol name="arrow.right" size={24} color={textColor} />
+        </ThemedView>
+      </TouchableOpacity>
+    </Swipeable>
   );
 };
 
@@ -88,7 +149,7 @@ const INITIAL_SALE: SelectedSale = {
 };
 
 export default function SalesScreen() {
-  const { sales, loading } = useSales();
+  const { sales, loading, searchText, setSearchText } = useSales();
   const textColor = useThemeColor({}, "text");
   const backgroundColor = useThemeColor({}, "background");
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
@@ -98,7 +159,7 @@ export default function SalesScreen() {
   const { top } = useSafeAreaInsets();
   const saleForm = useForm<SelectedSale>({
     defaultValues: INITIAL_SALE,
-  })
+  });
 
   const usersOptions = users.map((user) => ({
     id: user.id,
@@ -131,6 +192,7 @@ export default function SalesScreen() {
       <BottomSheetModalProvider>
         <ThemedView style={{ flex: 1, top }}>
           <ThemedView style={styles.headAction}>
+          <Search onChangeText={setSearchText} value={searchText} />
             <TouchableOpacity onPress={handlePresentModalPress}>
               <IconSymbol name="add" size={32} color={textColor} />
             </TouchableOpacity>
@@ -140,6 +202,7 @@ export default function SalesScreen() {
           </ThemedView>
           <FlatList
             data={sales}
+            scrollEnabled
             refreshing={loading}
             renderItem={({ item }) => (
               <SaleItem
@@ -199,8 +262,9 @@ const styles = StyleSheet.create({
   },
   headAction: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    padding: 12,
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingInline: 12,
   },
   headTitle: {
     paddingInline: 24,

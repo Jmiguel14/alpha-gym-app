@@ -6,6 +6,7 @@ import { useLocalSearchParams } from "expo-router";
 import SelectDropdown from "react-native-select-dropdown";
 import { useThemeColor } from "../../../hooks/useThemeColor";
 import { useState } from "react";
+import DatePicker from "react-native-date-picker";
 
 const MONTHS = [
   { id: "1", label: "Enero" },
@@ -65,6 +66,10 @@ const UserShow = () => {
           Ganancia neta de ventas ({currentLongStringMonth}):{" "}
         </ThemedText>
         <ThemedText style={styles.subtitle}>{user?.net_profit}</ThemedText>
+      </ThemedView>
+      <ThemedView style={styles.content}>
+        <ThemedText type="defaultSemiBold">Fecha: </ThemedText>
+        <DatePicker date={date} onDateChange={setDate} mode="date" modal/>
       </ThemedView>
       <ThemedView style={[{display: 'none'}, styles.content]}>
         <ThemedText>
