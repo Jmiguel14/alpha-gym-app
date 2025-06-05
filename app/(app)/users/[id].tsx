@@ -1,4 +1,4 @@
-import { SafeAreaView, StyleSheet } from "react-native";
+import { Button, SafeAreaView, StyleSheet } from "react-native";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useUser } from "@/hooks/useUser";
@@ -27,19 +27,20 @@ const UserShow = () => {
   const [date, setDate] = useState<Date>(new Date());
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user, isLoading } = useUser(id, date.toISOString());
+  const [open, setOpen] = useState(false);
   const textColor = useThemeColor({}, "text");
   const backgroundColor = useThemeColor({}, "background");
   const currentLongStringMonth = new Intl.DateTimeFormat("es-ES", {
     month: "long",
   }).format(date);
 
-  console.log({date})
+  console.log({ date });
 
   const onChangeMonth = (month: string) => {
     const newDate = new Date();
     newDate.setMonth(parseInt(month) - 1);
     setDate(newDate);
-  }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -69,12 +70,23 @@ const UserShow = () => {
       </ThemedView>
       <ThemedView style={styles.content}>
         <ThemedText type="defaultSemiBold">Fecha: </ThemedText>
-        <DatePicker date={date} onDateChange={setDate} mode="date" modal/>
+        <Button title="Open" onPress={() => setOpen(true)} />
+        <DatePicker
+          date={date}
+          mode="date"
+          modal
+          open={open}
+          onConfirm={(newDate) => {
+            setDate(newDate);
+            setOpen(false);
+          }}
+          onCancel={() => {
+            setOpen(false);
+          }}
+        />
       </ThemedView>
-      <ThemedView style={[{display: 'none'}, styles.content]}>
-        <ThemedText>
-          Escoger mes
-        </ThemedText>
+      <ThemedView style={[{ display: "none" }, styles.content]}>
+        <ThemedText>Escoger mes</ThemedText>
         <SelectDropdown
           data={MONTHS}
           renderItem={(selectedItem) => (
@@ -100,7 +112,9 @@ const UserShow = () => {
             </ThemedView>
           )}
           dropdownStyle={{ ...styles.dropdownMenuStyle, backgroundColor }}
-          defaultValue={MONTHS.find((el) => el.id == (date.getMonth() + 1).toString())}
+          defaultValue={MONTHS.find(
+            (el) => el.id == (date.getMonth() + 1).toString()
+          )}
         />
       </ThemedView>
     </SafeAreaView>

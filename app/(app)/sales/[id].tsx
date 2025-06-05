@@ -165,12 +165,11 @@ const SaleShow = () => {
       },
       client: {
         id: sale?.client?.id || 0,
-        label: sale?.client?.name || "",
+        label: sale?.client?.name || "",        
       },
-      date: new Date()
     };
     if (sale) {
-      saleForm.reset({...newSelectedSale, date: new Date(newSelectedSale.date || "")}, { keepDefaultValues: true });
+      saleForm.reset({...newSelectedSale, date: new Date(newSelectedSale?.date || Date.now())}, { keepDefaultValues: true });
     }
   }, [sale]);
 
