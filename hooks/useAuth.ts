@@ -28,14 +28,14 @@ export const useAuth = () => {
       setUser(rest);
       setSession(token);
       onSuccess?.();
-    } catch (error) {
-      console.log({ error });
+    } catch (error: any) {
+      const message = error?.response?.data?.status?.message;
       if (typeof window !== "undefined") {
         // Web
-        window.alert("Invalid email or password");
+        window.alert(message);
       } else {
         // React Native
-        Alert.alert("Error", "Invalid email or password");
+        Alert.alert("Error", message);
       }
     }
   };
